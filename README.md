@@ -4,11 +4,7 @@ Give it any customer CSV with a churn column, and it explains who is leaving and
 
 ## Web app
 
-```bash
-pip install -r requirements.txt
-copy .env.example .env      # add your Gemini API key (Windows; use cp on macOS/Linux)
-python app.py               # open http://127.0.0.1:5000
-```
+Link: https://churnrateanalyzer.vercel.app/
 
 1. **Upload** a CSV and say what the business is.
 2. **Check the columns.** The app shows what it detected: the churn column, the revenue column, and whether each column is categorical, numeric or excluded. Change anything that's wrong.
