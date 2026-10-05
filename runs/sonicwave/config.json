@@ -1,0 +1,68 @@
+{
+  "name": "sonicwave",
+  "csv": "data/sonicwave_subscribers.csv",
+  "target": "churned",
+  "positive_label": "1",
+  "id_column": "subscriber_id",
+  "revenue_column": "monthly_spend",
+  "categorical": [
+    "age_group",
+    "plan_type",
+    "content_mix",
+    "payment_method",
+    "last_ticket_topic",
+    "signup_channel"
+  ],
+  "numeric": [
+    "tenure_months",
+    "avg_weekly_hours",
+    "support_tickets_90d"
+  ],
+  "excluded": {
+    "subscriber_id": "identifier",
+    "monthly_spend": "fully determined by plan_type (redundant)"
+  },
+  "category_order": {
+    "age_group": [
+      "Under 25",
+      "25-34",
+      "35-49",
+      "50 plus"
+    ],
+    "plan_type": [
+      "Free",
+      "Basic",
+      "Premium",
+      "Family"
+    ],
+    "content_mix": [
+      "Low-usage",
+      "Balanced",
+      "Music-heavy",
+      "Podcast-heavy"
+    ],
+    "signup_channel": [
+      "Web",
+      "iOS",
+      "Android",
+      "Partner promo"
+    ],
+    "payment_method": [
+      "Credit card",
+      "Debit",
+      "PayPal",
+      "Gift card"
+    ],
+    "last_ticket_topic": [
+      "No ticket",
+      "Account",
+      "Billing",
+      "Content",
+      "Playback"
+    ]
+  },
+  "entity": "subscribers",
+  "business_context": "a music and podcast streaming service",
+  "currency": "$",
+  "display_name": "SonicWave"
+}
