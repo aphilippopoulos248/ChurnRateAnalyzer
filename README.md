@@ -6,7 +6,7 @@ An end-to-end churn analysis of 8,500 subscribers of **SonicWave**, a fictional 
 |---|---|---|
 | 1. Data visualization | ✅ Done | Find which subscriber attributes drive churn |
 | 2. Churn model | ✅ Done | Custom probability model predicting each subscriber's churn risk |
-| 3. Recommendations | Planned | Gemini/Gemma API turns model predictions into business recommendations |
+| 3. Recommendations | ✅ Built | Gemini/Gemma API turns model predictions into business recommendations |
 
 ## Dataset
 
@@ -86,10 +86,33 @@ A shallow surrogate decision tree fitted to the out-of-fold churn probabilities 
 
 The full segment report for Phase 3 is [`outputs/segment_risk.json`](outputs/segment_risk.json). It has each segment's rule, size, predicted vs actual churn, revenue at risk, distinguishing traits, the model's churn drivers, and caveats. It contains no subscriber IDs.
 
+## Phase 3 — Retention recommendations with Gemini
+
+`generate_recommendations.py` sends Gemini (`gemini-3.8-flash` by default) the Phase 2 segment report plus six key charts. Gemini is multimodal, so it reads the charts as images, not just the JSON numbers. It must answer in a fixed JSON schema (Pydantic), with the following for each segment:
+
+- priority rank
+- root-cause hypothesis
+- supporting evidence
+- 2–4 actions with owner, effort, timeline, assumed churn reduction, estimated savings and KPI
+- an A/B test to confirm the fix works
+
+The system prompt keeps it grounded: quote real numbers, treat drivers as hypotheses, rank by revenue at risk, don't over-invest in baseline churn, and respect the model's caveats. For example, it can't recommend changing the Premium plan, because Phase 2 showed Premium's raw churn comes from the partner-promo segment.
+
+**Guardrails:** the script checks Gemini's answer against the model's numbers. Every segment must have a plan, savings can't exceed the revenue at risk, each estimate must equal the stated reduction × that segment's at-risk revenue, and assumed reductions must stay within 5–50%. Any violations are listed in the report.
+
+Outputs:
+
+- [`outputs/recommendations.md`](outputs/recommendations.md): readable retention plan
+- [`outputs/recommendations.json`](outputs/recommendations.json): the same plan as structured data
+
 ## Run it
 
 ```bash
 pip install -r requirements.txt
 python visualize_churn.py    # Phase 1: figures 01-07
 python train_churn_model.py  # Phase 2: model, outputs/segment_risk.json, figures 08-11
+
+# Phase 3: copy .env.example to .env and add your Gemini API key, then
+python generate_recommendations.py            # writes outputs/recommendations.md + .json
+python generate_recommendations.py --dry-run  # preview the prompt without calling the API
 ```
