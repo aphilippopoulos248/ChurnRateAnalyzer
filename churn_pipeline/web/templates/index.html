@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block header %}
+<h1>Find out why customers leave</h1>
+<p class="lede">Upload a customer CSV with a churn column. The pipeline explores the data, searches for risky combinations of attributes, models each customer's churn risk, and has Gemini write a retention plan.</p>
+{% endblock %}
+{% block content %}
+<form class="panel" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" id="upload-form">
+  <h2>1. Upload your data</h2>
+  <div class="drop" id="drop">
+    <label for="csv">CSV file <span class="note">One row per customer, with a yes/no or 0/1 churn column. Up to 100 MB.</span></label>
+    <input type="file" id="csv" name="csv" accept=".csv,text/csv" required>
+  </div>
+  <div class="grid2">
+    <label for="name">Dataset name <span class="note">Used for the folder under runs/. Defaults to the file name.</span>
+      <input type="text" id="name" name="name" placeholder="e.g. telco">
+    </label>
+    <label for="display_name">Display name <span class="note">Shown on the dashboard.</span>
+      <input type="text" id="display_name" name="display_name" placeholder="e.g. Telco">
+    </label>
+    <label for="context">What is the business? <span class="note">Gemini uses this to tailor the plan.</span>
+      <input type="text" id="context" name="context" placeholder="e.g. a telecom provider (phone and internet)">
+    </label>
+    <label for="entity">What is one row? <span class="note">e.g. customers, subscribers, members</span>
+      <input type="text" id="entity" name="entity" placeholder="customers">
+    </label>
+  </div>
+  <div><button type="submit" id="upload-btn">Upload and detect columns</button></div>
+  {% if not has_key %}<p class="note">No Gemini API key found in <span class="mono">.env</span>. Phases 1 and 2 will run; the Gemini retention plan will be skipped.</p>{% endif %}
+</form>
+
+<section class="panel">
+  <h2>Previous runs</h2>
+  {% if runs %}
+  <div class="runs">
+    {% for r in runs %}
+    <div class="run">
+      <div style="display:grid;gap:2px">
+        <b>{{ r.display_name }}</b>
+        <div class="meta"><span>{{ "{:,}".format(r.rows) }} rows</span><span>{{ "%.1f"|format(r.churn * 100) }}% churn</span><span>{{ r.segments }} segments, {{ r.high }} high risk</span>
+          <span>{% if r.has_recs %}Gemini plan ready{% else %}No Gemini plan{% endif %}</span><span>Built {{ r.built_at }}</span></div>
+      </div>
+      <div class="actions"><a href="{{ url_for('dashboard', name=r.name) }}">Open dashboard</a><a href="{{ url_for('configure', name=r.name) }}">Settings</a></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="note">Nothing yet. Upload a CSV above and its dashboard will be listed here.</p>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+const drop = document.getElementById("drop"), input = document.getElementById("csv");
+["dragenter", "dragover"].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (ev) => { if (ev.dataTransfer.files.length) input.files = ev.dataTransfer.files; });
+document.getElementById("upload-form").addEventListener("submit", () => {
+  const b = document.getElementById("upload-btn"); b.disabled = true; b.textContent = "Uploading…";
+});
+</script>
+{% endblock %}

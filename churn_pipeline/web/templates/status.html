@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Running {{ display_name }}{% endblock %}
+{% block header %}
+<h1 id="headline"><span class="spin" aria-hidden="true"></span>Analysing {{ display_name }}</h1>
+<p class="lede" id="sub">This page opens the dashboard when the run finishes.</p>
+{% endblock %}
+{% block content %}
+<div class="steps" id="steps">
+  {% set labels = {'load': 'Load data', 'explore': 'Phase 1 · Explore', 'model': 'Phase 2 · Model', 'recommend': 'Phase 3 · Gemini', 'dashboard': 'Dashboard'} %}
+  {% for s in steps %}<div data-step="{{ s }}"><b>{{ labels[s] }}</b><span class="state">Waiting</span></div>{% endfor %}
+</div>
+<div class="log" id="log" aria-live="polite"></div>
+<div id="after" hidden><a class="btn" href="{{ url_for('dashboard', name=name) }}">Open the dashboard</a></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const order = {{ steps|tojson }};
+const api = "{{ url_for('api_status', name=name) }}", dash = "{{ url_for('dashboard', name=name) }}";
+async function poll() {
+  let job;
+  try { job = await (await fetch(api, { cache: "no-store" })).json(); }
+  catch (e) { setTimeout(poll, 2000); return; }
+  const cur = order.indexOf(job.step);
+  document.querySelectorAll("#steps div").forEach((el) => {
+    const i = order.indexOf(el.dataset.step);
+    const done = job.state === "done" || i < cur;
+    el.className = done ? "done" : i === cur ? "active" : "";
+    el.querySelector(".state").textContent = done ? "Done" : i === cur ? (job.state === "error" ? "Failed" : "Running") : "Waiting";
+  });
+  const log = document.getElementById("log");
+  log.innerHTML = job.log.map((l) => `<div class="${l.msg.startsWith("Failed") ? "err" : ""}">${l.msg.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</div>`).join("");
+  log.scrollTop = log.scrollHeight;
+  if (job.state === "running") { setTimeout(poll, 1000); return; }
+  document.querySelector(".spin")?.remove();
+  if (job.state === "done") {
+    document.getElementById("headline").textContent = "Finished";
+    document.getElementById("sub").textContent = "Opening the dashboard…";
+    document.getElementById("after").hidden = false;
+    setTimeout(() => { location.href = dash; }, 1200);
+  } else {
+    document.getElementById("headline").textContent = "The run failed";
+    document.getElementById("sub").textContent = "The last line of the log says why. Fix the settings and try again.";
+  }
+}
+poll();
+</script>
+{% endblock %}

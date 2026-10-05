@@ -141,8 +141,8 @@ def detect(csv_path, name=None, target=None, context=None):
 
     cfg = {
         "name": slug(name or csv_path.stem),
-        "csv": str(csv_path.resolve().relative_to(ROOT)) if csv_path.resolve().is_relative_to(ROOT)
-               else str(csv_path.resolve()),
+        "csv": csv_path.resolve().relative_to(ROOT).as_posix() if csv_path.resolve().is_relative_to(ROOT)
+               else csv_path.resolve().as_posix(),
         "target": target,
         "positive_label": positive,
         "id_column": id_column,
@@ -217,10 +217,15 @@ def load(name):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def csv_path(cfg):
+    """The config's CSV as a path. Stored with forward slashes so a config
+    written on Windows also works on macOS/Linux, and vice versa."""
+    csv = Path(str(cfg["csv"]).replace("\\", "/"))
+    return csv if csv.is_absolute() else ROOT / csv
+
+
 def load_data(cfg):
-    csv = Path(cfg["csv"])
-    csv = csv if csv.is_absolute() else ROOT / csv
-    return clean(pd.read_csv(csv), cfg)
+    return clean(pd.read_csv(csv_path(cfg)), cfg)
 
 
 def readable(col):

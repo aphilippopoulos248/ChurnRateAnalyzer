@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ cfg.display_name or cfg.name }} settings{% endblock %}
+{% block header %}
+<h1>{{ cfg.display_name or cfg.name }}: check the columns</h1>
+<p class="lede">Here's what the pipeline detected. Change anything that's wrong, then run it. These settings are saved to <span class="mono">runs/{{ cfg.name }}/config.json</span>.</p>
+{% endblock %}
+{% block content %}
+<form action="{{ url_for('run', name=cfg.name) }}" method="post" id="run-form" style="display:grid;gap:20px">
+  <div class="panel">
+    <h2>2. About the data</h2>
+    <div class="grid2">
+      <label>Churn column <span class="note">Churn means <span class="mono">{{ cfg.target }} = {{ cfg.positive_label }}</span>. To use a different column, upload again and choose it.</span>
+        <input type="text" value="{{ cfg.target }}" disabled>
+      </label>
+      <label for="revenue_column">Revenue column <span class="note">Monthly amount per row. Turns on revenue-at-risk figures.</span>
+        <select id="revenue_column" name="revenue_column">
+          <option value="" {% if not cfg.revenue_column %}selected{% endif %}>None</option>
+          {% for c in columns if c.role != 'target' %}
+          <option value="{{ c.name }}" {% if c.name == cfg.revenue_column %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label for="display_name">Display name
+        <input type="text" id="display_name" name="display_name" value="{{ cfg.display_name or '' }}">
+      </label>
+      <label for="business_context">What is the business?
+        <input type="text" id="business_context" name="business_context" value="{{ cfg.business_context }}">
+      </label>
+      <label for="entity">What is one row?
+        <input type="text" id="entity" name="entity" value="{{ cfg.entity }}">
+      </label>
+      <label for="currency">Currency symbol
+        <input type="text" id="currency" name="currency" value="{{ cfg.currency }}" maxlength="4">
+      </label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Columns</h2>
+    <p class="note">Categorical columns are compared group by group; numeric columns are binned and searched for thresholds. Exclude IDs, free text, and anything recorded after a customer churned (it would leak the answer).</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Column</th><th>Use as</th><th class="r">Unique</th><th class="r">Missing</th><th>Examples</th></tr></thead>
+        <tbody>
+        {% for c in columns %}
+          <tr class="{{ 'target' if c.role == 'target' else '' }}">
+            <td><b class="mono">{{ c.name }}</b>{% if c.reason %}<br><span class="note">{{ c.reason }}</span>{% endif %}</td>
+            <td>
+              {% if c.role == 'target' %}<span class="pill ok">churn column</span>
+              {% else %}
+              <select name="role__{{ c.name }}" aria-label="Use {{ c.name }} as">
+                {% for opt in ['categorical', 'numeric', 'excluded'] %}
+                <option value="{{ opt }}" {% if c.role == opt %}selected{% endif %}>{{ opt|capitalize }}</option>
+                {% endfor %}
+              </select>
+              {% endif %}
+            </td>
+            <td class="r">{{ "{:,}".format(c.unique) }}</td>
+            <td class="r">{{ "%.0f"|format(c.missing * 100) }}%</td>
+            <td class="note">{{ c.samples }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>4. Run</h2>
+    <label class="check"><input type="checkbox" name="use_gemini" {% if has_key %}checked{% else %}disabled{% endif %}>
+      Generate a retention plan with Gemini (<span class="mono">{{ model }}</span>)</label>
+    {% if not has_key %}<p class="note">Add <span class="mono">GEMINI_API_KEY=your-key</span> to <span class="mono">.env</span> and restart the app to enable this.</p>{% endif %}
+    <div><button type="submit" id="run-btn">Run the pipeline</button></div>
+    <p class="note">Usually under a minute: about 10 seconds for exploration and modelling, the rest is Gemini.</p>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("run-form").addEventListener("submit", () => {
+  const b = document.getElementById("run-btn"); b.disabled = true; b.textContent = "Starting…";
+});
+</script>
+{% endblock %}

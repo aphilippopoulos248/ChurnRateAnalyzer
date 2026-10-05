@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Choose the churn column{% endblock %}
+{% block header %}
+<h1>Which column says who churned?</h1>
+<p class="lede">{{ message }}</p>
+{% endblock %}
+{% block content %}
+<form class="panel" action="{{ url_for('pick_target', name=name) }}" method="post">
+  <label for="target">Churn column <span class="note">It needs exactly two values, like Yes/No or 1/0.</span>
+    <select id="target" name="target">{% for c in columns %}<option>{{ c }}</option>{% endfor %}</select>
+  </label>
+  <input type="hidden" name="context" value="{{ context }}">
+  <input type="hidden" name="entity" value="{{ entity }}">
+  <div><button type="submit">Continue</button></div>
+</form>
+{% endblock %}

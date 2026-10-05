@@ -1,6 +1,6 @@
 {
   "name": "sonicwave",
-  "csv": "data/sonicwave_subscribers.csv",
+  "csv": "data\\sonicwave_subscribers.csv",
   "target": "churned",
   "positive_label": "1",
   "id_column": "subscriber_id",

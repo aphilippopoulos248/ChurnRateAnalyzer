@@ -2,6 +2,22 @@
 
 Give it any customer CSV with a churn column, and it explains who is leaving and why, predicts each customer's churn risk, and has Gemini write a retention plan. The results go to an interactive web dashboard.
 
+## Web app
+
+```bash
+pip install -r requirements.txt
+copy .env.example .env      # add your Gemini API key (Windows; use cp on macOS/Linux)
+python app.py               # open http://127.0.0.1:5000
+```
+
+1. **Upload** a CSV and say what the business is.
+2. **Check the columns.** The app shows what it detected: the churn column, the revenue column, and whether each column is categorical, numeric or excluded. Change anything that's wrong.
+3. **Run.** A progress page follows each phase live, then opens the dashboard with the charts, model results, risk segments and Gemini's retention plan.
+
+Every run is listed on the home page, so you can reopen a dashboard or change its settings and rerun.
+
+## Command line
+
 ```
 python run_pipeline.py data/sonicwave_subscribers.csv --name sonicwave --context "a music and podcast streaming service" --entity subscribers
 ```
@@ -13,6 +29,7 @@ python run_pipeline.py data/sonicwave_subscribers.csv --name sonicwave --context
 | 2. Model | `churn_pipeline/model.py` | Compares logistic regression, logistic regression + the discovered interactions, and gradient boosting with 5-fold CV. Picks the explainable model unless boosting is clearly better. Groups customers into risk segments and writes caveats. |
 | 3. Recommend | `churn_pipeline/recommend.py` | Sends the segment report and charts to Gemini, requires a fixed JSON schema back, and checks every number against the model. |
 | 4. Dashboard | `churn_pipeline/dashboard.py` | Builds `runs/<name>/dashboard.html` and `docs/index.html`, which has a switcher for every dataset you've run. |
+| Web app | `app.py`, `churn_pipeline/web/` | Flask app: upload, column review, live progress, dashboard. `churn_pipeline/runner.py` runs the phases for both the app and the command line. |
 
 ## How the interaction search works
 
