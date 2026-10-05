@@ -8,7 +8,7 @@ SonicWave churn — Phase 2: churn prediction model + risk segmentation.
    that saw it during training) to carve the base into interpretable risk
    segments with a shallow surrogate decision tree.
 4. Writes outputs/segment_risk.json for Phase 3 (Gemini/Gemma), plus
-   outputs/model_metrics.json and figures 08-11.
+   outputs/model_metrics.json, outputs/dashboard_model.json and figures 08-11.
 
 Usage:
     python train_churn_model.py
@@ -369,6 +369,26 @@ def fig11_segments(segments, overall):
     save(fig, "11_risk_segments.png")
 
 
+def dashboard_data(y, oof, p, drivers):
+    """Chart-ready numbers for the web dashboard (build_dashboard.py)."""
+    def thin(xs, ys, n=150):
+        idx = np.unique(np.linspace(0, len(xs) - 1, min(n, len(xs))).astype(int))
+        return [[round(float(xs[i]), 4), round(float(ys[i]), 4)] for i in idx]
+
+    curves = {}
+    for name, prob in oof.items():
+        fpr, tpr, _ = roc_curve(y, prob)
+        prec, rec, _ = precision_recall_curve(y, prob)
+        curves[name] = {"roc": thin(fpr, tpr), "pr": thin(rec[::-1], prec[::-1])}
+    bins = np.array([0, 0.02, 0.03, 0.04, 0.05, 0.1, 0.4, 0.5, 0.6, 0.7, 1.0])
+    cal = (pd.DataFrame({"bin": np.digitize(p, bins[1:-1]), "p": p, "y": y})
+             .groupby("bin").agg(pred=("p", "mean"), act=("y", "mean"), n=("y", "size")))
+    calibration = [{"predicted": round(float(r.pred), 4), "actual": round(float(r.act), 4),
+                    "n": int(r.n)} for r in cal.itertuples() if r.n >= 30]
+    return {"chosen_model": CHOSEN, "curves": curves,
+            "calibration": calibration, "odds_ratios": drivers}
+
+
 # ---------------------------------------------------------------- main
 def main():
     for d in (MODELS_DIR, OUTPUTS_DIR, ROOT / "figures"):
@@ -424,6 +444,9 @@ def main():
     (OUTPUTS_DIR / "segment_risk.json").write_text(json.dumps(report, indent=2))
     (OUTPUTS_DIR / "model_metrics.json").write_text(json.dumps(metrics, indent=2))
     print("  wrote outputs/segment_risk.json\n  wrote outputs/model_metrics.json")
+    (OUTPUTS_DIR / "dashboard_model.json").write_text(
+        json.dumps(dashboard_data(y, oof, p, drivers), indent=1))
+    print("  wrote outputs/dashboard_model.json")
 
     fig08_model_comparison(y, oof, metrics)
     fig09_odds_ratios(drivers)

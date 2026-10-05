@@ -105,6 +105,12 @@ Outputs:
 - [`outputs/recommendations.md`](outputs/recommendations.md): readable retention plan
 - [`outputs/recommendations.json`](outputs/recommendations.json): the same plan as structured data
 
+## Dashboard
+
+`build_dashboard.py` collects the outputs of all three phases into one self-contained page, [`docs/index.html`](docs/index.html). It has interactive charts (hover for details), the model comparison, risk segments and Gemini's retention plan. It needs no server: open the file in a browser, or host it free with GitHub Pages.
+
+**GitHub Pages:** in the repo, go to *Settings → Pages*. Under *Build and deployment*, set *Source* to "Deploy from a branch", then choose `main` and `/docs`. The dashboard will be at `https://<your-username>.github.io/sonicwave-churn-pipeline/`.
+
 ## Run it
 
 ```bash
@@ -115,4 +121,5 @@ python train_churn_model.py  # Phase 2: model, outputs/segment_risk.json, figure
 # Phase 3: copy .env.example to .env and add your Gemini API key, then
 python generate_recommendations.py            # writes outputs/recommendations.md + .json
 python generate_recommendations.py --dry-run  # preview the prompt without calling the API
+python build_dashboard.py                     # writes docs/index.html
 ```

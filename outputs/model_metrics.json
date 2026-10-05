@@ -16,11 +16,11 @@
     "top_decile_share_of_churners_captured": 0.6121
   },
   "Gradient boosting (raw features)": {
-    "roc_auc": 0.8348,
-    "pr_auc": 0.4627,
-    "brier": 0.0588,
-    "top_decile_churn_rate": 0.5906,
-    "top_decile_lift": 6.08,
-    "top_decile_share_of_churners_captured": 0.6085
+    "roc_auc": 0.8365,
+    "pr_auc": 0.4644,
+    "brier": 0.0586,
+    "top_decile_churn_rate": 0.5929,
+    "top_decile_lift": 6.11,
+    "top_decile_share_of_churners_captured": 0.6109
   }
 }

@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SonicWave Churn Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a single analyst's notebook column (max 1180px) that walks the pipeline in order:
+   KPIs -> pipeline map -> Phase 1 explore -> Phase 2 model -> Phase 3 plan. Charts sit on quiet
+   surfaces; color is reserved for data (blue = high risk / chosen, red = raises churn). */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --ink: #111820;
+  --ink-2: #48525e;
+  --muted: #727c89;
+  --line: #dfe3e8;
+  --grid: #eceff3;
+  --accent: #2a78d6;
+  --accent-soft: #e6f0fb;
+  --risk: #d93f3e;
+  --risk-soft: #fcebea;
+  --good: #0c8a2e;
+  --bar-muted: #bcc1c8;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --h0: #f1f5fb; --h1: #d6e5f8; --h2: #a9c9f0; --h3: #5f9ce6; --h4: #2a78d6; --h5: #154c91;
+  --h-ink-lo: #111820; --h-ink-hi: #ffffff;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1116; --surface: #161b22; --ink: #edf1f6; --ink-2: #b3bcc8; --muted: #8590a0;
+    --line: #29313c; --grid: #1f262f; --accent: #4a92ea; --accent-soft: #1a2a40;
+    --risk: #ef6b6a; --risk-soft: #3a1d20; --good: #3fbf62; --bar-muted: #4c5562;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --h0: #1b222c; --h1: #1d3352; --h2: #234b7d; --h3: #2f6ab0; --h4: #4a92ea; --h5: #9cc5f5;
+    --h-ink-lo: #edf1f6; --h-ink-hi: #0e1116;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1116; --surface: #161b22; --ink: #edf1f6; --ink-2: #b3bcc8; --muted: #8590a0;
+  --line: #29313c; --grid: #1f262f; --accent: #4a92ea; --accent-soft: #1a2a40;
+  --risk: #ef6b6a; --risk-soft: #3a1d20; --good: #3fbf62; --bar-muted: #4c5562;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --h0: #1b222c; --h1: #1d3352; --h2: #234b7d; --h3: #2f6ab0; --h4: #4a92ea; --h5: #9cc5f5;
+  --h-ink-lo: #edf1f6; --h-ink-hi: #0e1116;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: clamp(22px, 2.6vw, 28px); font-weight: 700; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--ink-2); font-size: 16px; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-data); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* header */
+header { display: grid; gap: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 13px; }
+
+/* KPI strip */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 2px; }
+.kpi .v { font-family: var(--font-display); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: 13px; color: var(--ink-2); }
+.kpi .d { font-size: 12px; color: var(--muted); }
+.kpi.alert .v { color: var(--risk); }
+
+/* pipeline map */
+.pipeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.step { padding: 16px 18px; display: grid; gap: 4px; text-decoration: none; color: inherit; border-right: 1px solid var(--line); position: relative; }
+.step:last-child { border-right: 0; }
+.step:hover { background: var(--accent-soft); }
+.step .k { font-family: var(--font-data); font-size: 12px; color: var(--accent); }
+.step .t { font-weight: 600; }
+.step .o { font-size: 12.5px; color: var(--ink-2); }
+.step .f { font-family: var(--font-data); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+@media (max-width: 760px) { .pipeline { grid-template-columns: 1fr 1fr; } .step:nth-child(2) { border-right: 0; } .step:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+@media (max-width: 440px) { .pipeline { grid-template-columns: 1fr; } .step { border-right: 0; border-bottom: 1px solid var(--line); } .step:last-child { border-bottom: 0; } }
+
+/* sections */
+section { display: grid; gap: 18px; scroll-margin-top: 16px; }
+.sec-head { display: grid; gap: 6px; border-top: 2px solid var(--ink); padding-top: 14px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; }
+.note { font-size: 12.5px; color: var(--muted); }
+.chart { width: 100%; min-height: 120px; position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--font-body); }
+
+/* controls */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); padding: 4px 11px; border-radius: 999px; cursor: pointer; }
+.chip:hover { border-color: var(--accent); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+select.sel { font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); max-width: 100%; }
+
+/* findings */
+.findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { .findings { grid-template-columns: 1fr; } }
+.finding { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; display: grid; gap: 4px; }
+.finding.corr { border-left-color: var(--risk); }
+.finding b { font-weight: 600; }
+.finding span { color: var(--ink-2); font-size: 14px; }
+
+/* tables */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.tbl-wrap table { min-width: 480px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+tr.chosen td { background: var(--accent-soft); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.high { background: var(--risk-soft); color: var(--risk); }
+.pill.low { background: var(--grid); color: var(--ink-2); }
+.pill.medium { background: var(--accent-soft); color: var(--accent); }
+.pill.ok { background: var(--accent-soft); color: var(--accent); }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* segment cards */
+.seg { display: grid; gap: 10px; }
+.seg.high { border-top: 3px solid var(--risk); }
+.seg .big { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.seg dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 13.5px; }
+.seg dt { color: var(--muted); }
+.seg dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.seg ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); display: grid; gap: 2px; }
+.meter { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+
+/* plans */
+details.plan { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+details.plan > summary { list-style: none; cursor: pointer; padding: 14px 18px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+details.plan > summary::-webkit-details-marker { display: none; }
+.rank { font-family: var(--font-display); font-weight: 700; font-size: 22px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--surface); }
+.sumtext { display: grid; gap: 2px; min-width: 0; }
+.sumtext .sub { font-size: 13px; color: var(--ink-2); }
+.saved { text-align: right; font-size: 12px; color: var(--muted); }
+.saved b { display: block; font-family: var(--font-display); font-size: 20px; color: var(--good); font-variant-numeric: tabular-nums; }
+.plan-body { padding: 0 18px 18px; display: grid; gap: 16px; border-top: 1px solid var(--line); padding-top: 16px; }
+.plan-body h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.plan-body ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.chev { transition: transform .2s; color: var(--muted); }
+details[open] .chev { transform: rotate(90deg); }
+.actions { display: grid; gap: 10px; }
+.action { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; }
+.action-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: baseline; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 12px; padding: 1px 8px; border-radius: 4px; background: var(--grid); color: var(--ink-2); white-space: nowrap; }
+.action p { font-size: 14px; color: var(--ink-2); }
+.kv { font-size: 13px; color: var(--ink-2); }
+.kv b { color: var(--ink); font-weight: 600; }
+.lists { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { .lists { grid-template-columns: 1fr; } }
+.lists ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.empty { border: 1px dashed var(--line); border-radius: var(--radius); padding: 22px; color: var(--ink-2); display: grid; gap: 6px; }
+@media (max-width: 560px) { details.plan > summary { grid-template-columns: auto minmax(0, 1fr); } .saved { grid-column: 2; text-align: left; } .saved b { display: inline; margin-right: 6px; } }
+
+/* tooltip */
+#tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--surface); font-size: 12.5px; line-height: 1.4; padding: 7px 10px; border-radius: 6px; max-width: 260px; opacity: 0; transition: opacity .1s; }
+#tip.on { opacity: 1; }
+#tip b { font-weight: 600; }
+footer { color: var(--muted); font-size: 13px; display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Churn analysis pipeline · Python · scikit-learn · Gemini</div>
+    <h1>SonicWave Churn Pipeline</h1>
+    <p class="lede" id="lede">Which subscribers of a music and podcast streaming service are about to cancel, why, and what to do about it. Three phases: explore the data, model churn risk, and turn the model into a retention plan with Gemini.</p>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div class="kpis" id="kpis" aria-label="Headline numbers"></div>
+
+  <nav class="pipeline" aria-label="Pipeline stages">
+    <a class="step" href="#data"><span class="k">Input</span><span class="t">Subscriber data</span><span class="o" id="step-data"></span><span class="f">data/sonicwave_subscribers.csv</span></a>
+    <a class="step" href="#explore"><span class="k">Phase 1</span><span class="t">Explore</span><span class="o">Churn rate by every attribute and pair of attributes</span><span class="f">visualize_churn.py</span></a>
+    <a class="step" href="#model"><span class="k">Phase 2</span><span class="t">Model</span><span class="o" id="step-model"></span><span class="f">train_churn_model.py</span></a>
+    <a class="step" href="#plan"><span class="k">Phase 3</span><span class="t">Recommend</span><span class="o" id="step-plan"></span><span class="f">generate_recommendations.py</span></a>
+  </nav>
+
+  <section id="explore" aria-labelledby="h-explore">
+    <div class="sec-head">
+      <div class="eyebrow">Phase 1 · Explore</div>
+      <h2 id="h-explore">Where churn concentrates</h2>
+      <p class="lede" id="data">Churn rate for each subscriber group. The dashed line is the overall rate; blue bars churn more than 15% above it.</p>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-head"><h3>Churn rate by attribute</h3></div>
+        <div class="chips" id="attr-chips" role="group" aria-label="Attribute"></div>
+        <div class="chart" id="attr-chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="heat-title">Two attributes combined</h3>
+          <label class="note" for="heat-sel">Compare
+            <select class="sel" id="heat-sel"></select>
+          </label>
+        </div>
+        <div class="chart" id="heat-chart"></div>
+        <div class="note">Cells with fewer than 30 subscribers are greyed out as too small to trust.</div>
+      </div>
+    </div>
+    <div class="findings" id="findings"></div>
+  </section>
+
+  <section id="model" aria-labelledby="h-model">
+    <div class="sec-head">
+      <div class="eyebrow">Phase 2 · Model</div>
+      <h2 id="h-model">Predicting who will churn</h2>
+      <p class="lede">Three models scored with 5-fold cross-validation, so every subscriber is predicted by a model that never saw them. The chosen model is logistic regression with interaction flags: as accurate as gradient boosting, with probabilities that match reality and drivers you can read.</p>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-head"><h3>Model comparison</h3></div>
+        <div class="tbl-wrap"><table id="metrics-tbl"></table></div>
+        <div class="chips" id="curve-chips" role="group" aria-label="Curve"></div>
+        <div class="chart" id="curve-chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>What drives churn</h3><span class="note">Odds ratio, log scale</span></div>
+        <div class="chart" id="odds-chart"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-head"><h3>Calibration</h3><span class="note">Predicted vs actual churn</span></div>
+        <div class="chart" id="cal-chart"></div>
+        <p class="note">Points near the dashed line mean a predicted 56% really is about 56%. That matters because Phase 3 turns these probabilities into revenue at risk.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Engineered features</h3></div>
+        <div class="tbl-wrap"><table id="flags-tbl"></table></div>
+        <p class="note">Logistic regression adds feature effects together, so it can't learn "A and B together" on its own. These flags hand it the combinations found in Phase 1.</p>
+      </div>
+    </div>
+    <div class="panel-head"><h3>Risk segments</h3><span class="note">A shallow decision tree grouped subscribers by their predicted risk</span></div>
+    <div class="grid3" id="segments"></div>
+  </section>
+
+  <section id="plan" aria-labelledby="h-plan">
+    <div class="sec-head">
+      <div class="eyebrow">Phase 3 · Recommend</div>
+      <h2 id="h-plan">Retention plan</h2>
+      <p class="lede" id="plan-lede">Gemini read the segment report and the charts and returned a structured plan. Segment figures come from the model; strategies and savings are Gemini's assumptions until tested.</p>
+    </div>
+    <div id="plan-body" style="display:grid;gap:16px"></div>
+  </section>
+
+  <footer>
+    <span id="built"></span>
+    <span>Data is a synthetic subscriber dataset. Drivers are associations from historical data, not proven causes.</span>
+  </footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const D = {"built_at":"2026-10-05 19:35 UTC","phase1":{"overall":0.0971,"attributes":{"plan_type":{"label":"Plan","rows":[{"label":"Free","rate":0.0783,"n":1213},{"label":"Basic","rate":0.0703,"n":2632},{"label":"Premium","rate":0.1319,"n":3397},{"label":"Family","rate":0.0771,"n":1258}]},"content_mix":{"label":"Content mix","rows":[{"label":"Low-usage","rate":0.2263,"n":1277},{"label":"Balanced","rate":0.0727,"n":2296},{"label":"Music-heavy","rate":0.0761,"n":3165},{"label":"Podcast-heavy","rate":0.0726,"n":1762}]},"signup_channel":{"label":"Signup channel","rows":[{"label":"Web","rate":0.0736,"n":2500},{"label":"iOS","rate":0.0727,"n":2215},{"label":"Android","rate":0.077,"n":2505},{"label":"Partner promo","rate":0.2242,"n":1280}]},"last_ticket_topic":{"label":"Last ticket topic","rows":[{"label":"No ticket","rate":0.0571,"n":4620},{"label":"Account","rate":0.059,"n":661},{"label":"Billing","rate":0.2812,"n":1529},{"label":"Content","rate":0.0686,"n":481},{"label":"Playback","rate":0.0488,"n":1209}]},"tickets_bucket":{"label":"Support tickets (last 90 days)","rows":[{"label":"0","rate":0.0571,"n":4620},{"label":"1","rate":0.0543,"n":2836},{"label":"2","rate":0.3948,"n":846},{"label":"3+","rate":0.3687,"n":198}]},"payment_method":{"label":"Payment method","rows":[{"label":"Credit card","rate":0.0929,"n":4705},{"label":"Debit","rate":0.1008,"n":1666},{"label":"PayPal","rate":0.1046,"n":1702},{"label":"Gift card","rate":0.0984,"n":427}]},"age_group":{"label":"Age group","rows":[{"label":"Under 25","rate":0.09,"n":1923},{"label":"25-34","rate":0.0971,"n":2903},{"label":"35-49","rate":0.1023,"n":2356},{"label":"50 plus","rate":0.0979,"n":1318}]},"tenure_bucket":{"label":"Tenure (months)","rows":[{"label":"1-3","rate":0.0973,"n":329},{"label":"4-6","rate":0.1117,"n":1253},{"label":"7-12","rate":0.0995,"n":2824},{"label":"13-24","rate":0.0955,"n":2732},{"label":"25-60","rate":0.0815,"n":1362}]},"hours_bucket":{"label":"Avg weekly listening hours (quintile)","rows":[{"label":"0-4h","rate":0.0935,"n":1712},{"label":"4-7h","rate":0.094,"n":1724},{"label":"7-10h","rate":0.0941,"n":1668},{"label":"10-16h","rate":0.1179,"n":1705},{"label":"16-40h","rate":0.0857,"n":1691}]}},"heatmaps":{"tickets_topic":{"title":"Repeat tickets only predict churn when the topic is Billing","row_label":"Support tickets (last 90 days)","col_label":"Last ticket topic","rows":["0","1","2","3+"],"cols":["No ticket","Account","Billing","Content","Playback"],"cells":[[{"rate":0.0571,"n":4620},{"rate":null,"n":0},{"rate":null,"n":0},{"rate":null,"n":0},{"rate":null,"n":0}],[{"rate":null,"n":0},{"rate":0.0542,"n":554},{"rate":0.0531,"n":847},{"rate":0.0695,"n":417},{"rate":0.0491,"n":1018}],[{"rate":null,"n":0},{"rate":0.0976,"n":82},{"rate":0.5722,"n":547},{"rate":0.0741,"n":54},{"rate":0.0552,"n":163}],[{"rate":null,"n":0},{"rate":0.04,"n":25},{"rate":0.5333,"n":135},{"rate":0.0,"n":10},{"rate":0.0,"n":28}]]},"channel_mix":{"title":"Partner-promo signups who barely listen churn at ~52%","row_label":"Signup channel","col_label":"Content mix","rows":["Web","iOS","Android","Partner promo"],"cols":["Low-usage","Balanced","Music-heavy","Podcast-heavy"],"cells":[[{"rate":0.0736,"n":299},{"rate":0.0736,"n":707},{"rate":0.0721,"n":943},{"rate":0.0762,"n":551}],[{"rate":0.0722,"n":263},{"rate":0.0776,"n":606},{"rate":0.0756,"n":847},{"rate":0.0621,"n":499}],[{"rate":0.0821,"n":280},{"rate":0.0678,"n":723},{"rate":0.0815,"n":981},{"rate":0.0787,"n":521}],[{"rate":0.5172,"n":435},{"rate":0.0731,"n":260},{"rate":0.0736,"n":394},{"rate":0.0733,"n":191}]]},"plan_topic":{"title":"Billing tickets raise churn on every plan","row_label":"Plan","col_label":"Last ticket topic","rows":["Free","Basic","Premium","Family"],"cols":["No ticket","Account","Billing","Content","Playback"],"cells":[[{"rate":0.0367,"n":626},{"rate":0.0467,"n":107},{"rate":0.2489,"n":225},{"rate":0.0857,"n":70},{"rate":0.027,"n":185}],[{"rate":0.0284,"n":1446},{"rate":0.0379,"n":211},{"rate":0.2587,"n":491},{"rate":0.0276,"n":145},{"rate":0.0147,"n":339}],[{"rate":0.0941,"n":1880},{"rate":0.095,"n":242},{"rate":0.3069,"n":593},{"rate":0.1111,"n":180},{"rate":0.0916,"n":502}],[{"rate":0.0344,"n":668},{"rate":0.0297,"n":101},{"rate":0.2955,"n":220},{"rate":0.0349,"n":86},{"rate":0.0164,"n":183}]]}},"revenue_by_plan":[{"plan":"Basic","lost":1478.15,"total":21029.68},{"plan":"Premium","lost":5819.52,"total":44127.03},{"plan":"Family","lost":1842.03,"total":23889.42}]},"segments":{"generated_at":"2026-10-05T19:28:50+00:00","purpose":"Churn-risk segments for SonicWave subscribers. Use these to decide which groups to target and what retention actions to take.","dataset":{"subscribers":8500,"overall_churn_rate":0.0971,"total_monthly_revenue":89046.13,"expected_monthly_revenue_at_risk":9159.82},"model":{"type":"Logistic regression + interaction flags","validation":"5-fold stratified cross-validation; segment figures use out-of-fold predictions","metrics":{"roc_auc":0.8337,"pr_auc":0.4648,"brier":0.0561,"top_decile_churn_rate":0.5941,"top_decile_lift":6.12,"top_decile_share_of_churners_captured":0.6121},"engineered_features":{"billing_repeat":"2+ support tickets in 90 days and the last one was about Billing","promo_premium_low_usage":"Signed up via Partner promo, on Premium, Low-usage content mix","billing_and_promo":"Has both billing_repeat and promo_premium_low_usage"}},"segments":[{"segment_id":"S1","name":"Partner-promo Premium, low usage","rule":["NOT (2+ support tickets in 90 days and the last one was about Billing)","Signed up via Partner promo, on Premium, Low-usage content mix"],"risk_tier":"High","subscribers":322,"share_of_base":0.0379,"predicted_churn_rate":0.6079,"actual_churn_rate":0.6366,"lift_vs_overall":6.26,"expected_churners":195.7,"monthly_revenue":4182.78,"expected_monthly_revenue_at_risk":2542.6,"share_of_total_revenue_at_risk":0.2776,"plan_mix":{"Premium":1.0},"median_tenure_months":11.0,"median_weekly_hours":8.05,"distinguishing_traits":[{"attribute":"content_mix","value":"Low-usage","share_in_segment":1.0,"share_in_population":0.15,"over_representation":6.66},{"attribute":"signup_channel","value":"Partner promo","share_in_segment":1.0,"share_in_population":0.151,"over_representation":6.64},{"attribute":"plan_type","value":"Premium","share_in_segment":1.0,"share_in_population":0.4,"over_representation":2.5}]},{"segment_id":"S2","name":"Repeat billing complaints","rule":["2+ support tickets in 90 days and the last one was about Billing"],"risk_tier":"High","subscribers":682,"share_of_base":0.0802,"predicted_churn_rate":0.5621,"actual_churn_rate":0.5645,"lift_vs_overall":5.79,"expected_churners":383.3,"monthly_revenue":7242.07,"expected_monthly_revenue_at_risk":4071.39,"share_of_total_revenue_at_risk":0.4445,"plan_mix":{"Premium":0.399,"Basic":0.318,"Family":0.152,"Free":0.13},"median_tenure_months":11.0,"median_weekly_hours":8.1,"distinguishing_traits":[{"attribute":"last_ticket_topic","value":"Billing","share_in_segment":1.0,"share_in_population":0.18,"over_representation":5.56}]},{"segment_id":"S3","name":"Everyone else (baseline)","rule":["NOT (2+ support tickets in 90 days and the last one was about Billing)","NOT (Signed up via Partner promo, on Premium, Low-usage content mix)"],"risk_tier":"Low","subscribers":7496,"share_of_base":0.8819,"predicted_churn_rate":0.0331,"actual_churn_rate":0.0314,"lift_vs_overall":0.34,"expected_churners":248.1,"monthly_revenue":77621.28,"expected_monthly_revenue_at_risk":2545.84,"share_of_total_revenue_at_risk":0.2779,"plan_mix":{"Premium":0.374,"Basic":0.322,"Family":0.154,"Free":0.15},"median_tenure_months":12.0,"median_weekly_hours":8.0,"distinguishing_traits":[]}],"churn_drivers":[{"feature":"promo_premium_low_usage","comparison":"if present vs absent","odds_ratio":47.323,"direction":"raises churn"},{"feature":"billing_repeat","comparison":"if present vs absent","odds_ratio":33.47,"direction":"raises churn"},{"feature":"last_ticket_topic = Account","comparison":"vs No ticket","odds_ratio":1.322,"direction":"raises churn"},{"feature":"plan_type = Free","comparison":"vs Basic","odds_ratio":1.289,"direction":"raises churn"},{"feature":"last_ticket_topic = Content","comparison":"vs No ticket","odds_ratio":1.278,"direction":"raises churn"},{"feature":"last_ticket_topic = Billing","comparison":"vs No ticket","odds_ratio":1.263,"direction":"raises churn"}],"caveats":["Drivers are associations from historical data, not proven causes; test interventions before rolling out.","Premium's higher raw churn rate (13% vs 7-8%) is almost entirely explained by Premium subscribers being over-represented in the partner-promo low-usage group; outside it, Premium churns like every other plan.","Subscribers with both billing_repeat and promo_premium_low_usage (28 people) churn at ~54%, not higher: the two risks overlap rather than stack. The model includes a billing_and_promo correction term for this, which is left out of churn_drivers.","Subscribers outside the high-risk segments churn at about 3%, and the model finds no further pattern there; treat that as baseline churn."]},"model":{"chosen_model":"Logistic regression + interaction flags","curves":{"Logistic regression (raw features)":{"roc":[[0.0,0.0],[0.0012,0.0061],[0.0018,0.0133],[0.0025,0.0194],[0.0033,0.0364],[0.0042,0.0412],[0.0051,0.0521],[0.0059,0.0642],[0.0068,0.0703],[0.0074,0.0776],[0.0083,0.0958],[0.009,0.1079],[0.0099,0.1176],[0.0109,0.1297],[0.0116,0.1382],[0.0125,0.1442],[0.0132,0.1479],[0.0137,0.1564],[0.0143,0.1697],[0.0152,0.1758],[0.0163,0.1855],[0.0169,0.1952],[0.0179,0.2048],[0.0185,0.2109],[0.0202,0.2218],[0.021,0.2267],[0.0225,0.2327],[0.0241,0.24],[0.0248,0.2545],[0.0254,0.2642],[0.0263,0.2727],[0.0276,0.2776],[0.0289,0.2824],[0.0296,0.2873],[0.0307,0.2945],[0.0313,0.303],[0.0321,0.3079],[0.0326,0.3152],[0.0344,0.3212],[0.0352,0.3261],[0.0361,0.3345],[0.0371,0.3418],[0.0378,0.3467],[0.0383,0.3685],[0.039,0.3782],[0.0399,0.383],[0.0407,0.3903],[0.0416,0.3976],[0.0423,0.4097],[0.0427,0.4158],[0.0435,0.4279],[0.0446,0.4339],[0.0452,0.4424],[0.0463,0.4485],[0.0473,0.457],[0.0489,0.4715],[0.0506,0.4788],[0.0522,0.4933],[0.0534,0.4982],[0.055,0.5018],[0.0563,0.5152],[0.0572,0.5248],[0.0588,0.537],[0.0615,0.5455],[0.0624,0.5539],[0.0629,0.56],[0.0645,0.5685],[0.0657,0.5733],[0.0664,0.5794],[0.0672,0.5879],[0.0684,0.5927],[0.0698,0.5976],[0.0709,0.6048],[0.0722,0.6133],[0.0731,0.6206],[0.0741,0.6303],[0.0764,0.64],[0.077,0.6485],[0.0778,0.6594],[0.0787,0.663],[0.0807,0.6691],[0.0818,0.6788],[0.0846,0.6848],[0.0855,0.6909],[0.0869,0.697],[0.0909,0.7042],[0.0939,0.7091],[0.0968,0.7152],[0.0988,0.7188],[0.1148,0.7248],[0.1295,0.7297],[0.1433,0.7333],[0.15,0.7382],[0.1591,0.743],[0.175,0.7467],[0.1827,0.7515],[0.1896,0.7552],[0.2082,0.76],[0.2195,0.7648],[0.2375,0.7685],[0.2499,0.7733],[0.2562,0.7782],[0.2676,0.783],[0.2859,0.7879],[0.2982,0.7952],[0.3166,0.7988],[0.3359,0.8036],[0.3556,0.8085],[0.3717,0.8133],[0.3776,0.8182],[0.3932,0.823],[0.4029,0.8267],[0.4074,0.8315],[0.4315,0.8364],[0.4525,0.84],[0.4579,0.8448],[0.49,0.8497],[0.5066,0.8533],[0.5137,0.8582],[0.5238,0.8618],[0.5279,0.8667],[0.5485,0.8715],[0.5917,0.8752],[0.6134,0.88],[0.6199,0.8848],[0.6446,0.8885],[0.6714,0.8933],[0.6753,0.8982],[0.6846,0.9018],[0.7041,0.9067],[0.7118,0.9115],[0.7225,0.9152],[0.7321,0.9212],[0.7455,0.9261],[0.7537,0.9297],[0.7665,0.9358],[0.7979,0.9406],[0.812,0.9455],[0.8151,0.9515],[0.8266,0.9552],[0.8401,0.9612],[0.8797,0.9661],[0.9089,0.9697],[0.9179,0.9745],[0.9229,0.9782],[0.9367,0.9818],[0.953,0.9867],[0.9683,0.9915],[0.9792,0.9952],[1.0,1.0]],"pr":[[0.0,1.0],[0.0376,0.5439],[0.0739,0.5351],[0.1152,0.5556],[0.1515,0.5482],[0.1903,0.5509],[0.223,0.538],[0.2545,0.5263],[0.2824,0.511],[0.3164,0.5088],[0.343,0.4965],[0.3842,0.5056],[0.4242,0.5117],[0.4582,0.5101],[0.4873,0.5038],[0.5139,0.4959],[0.5455,0.4934],[0.5697,0.485],[0.5964,0.4795],[0.6242,0.4755],[0.6582,0.4763],[0.6824,0.4703],[0.697,0.4585],[0.7115,0.4477],[0.72,0.4342],[0.7212,0.4173],[0.7248,0.4032],[0.7273,0.3896],[0.7297,0.377],[0.7333,0.3658],[0.7345,0.3542],[0.7382,0.3445],[0.7406,0.3348],[0.7455,0.3268],[0.7467,0.3177],[0.7503,0.3101],[0.7539,0.303],[0.7588,0.2967],[0.76,0.2893],[0.76,0.2819],[0.7624,0.2758],[0.7661,0.2703],[0.7685,0.2647],[0.7685,0.2586],[0.7697,0.2531],[0.7745,0.249],[0.7794,0.2451],[0.783,0.241],[0.7855,0.2368],[0.7879,0.2326],[0.7903,0.2286],[0.7915,0.2245],[0.7952,0.2212],[0.7976,0.2177],[0.7988,0.214],[0.8012,0.2107],[0.8036,0.2076],[0.8061,0.2046],[0.8073,0.2013],[0.8073,0.1979],[0.8097,0.1952],[0.8109,0.1923],[0.8158,0.1903],[0.8182,0.1879],[0.8218,0.1858],[0.823,0.1832],[0.8267,0.1812],[0.8315,0.1795],[0.8315,0.1769],[0.8327,0.1746],[0.8339,0.1723],[0.8364,0.1704],[0.84,0.1688],[0.84,0.1665],[0.8448,0.1652],[0.8473,0.1634],[0.8473,0.1612],[0.8485,0.1594],[0.8485,0.1573],[0.8509,0.1558],[0.8533,0.1543],[0.857,0.153],[0.8594,0.1516],[0.863,0.1504],[0.8679,0.1494],[0.8679,0.1477],[0.8691,0.1462],[0.8739,0.1453],[0.8752,0.1439],[0.8752,0.1422],[0.8752,0.1407],[0.8752,0.1391],[0.8752,0.1376],[0.88,0.1369],[0.88,0.1354],[0.88,0.134],[0.8824,0.133],[0.8848,0.132],[0.8861,0.1308],[0.8885,0.1298],[0.8909,0.1289],[0.8921,0.1278],[0.8921,0.1265],[0.8933,0.1254],[0.8982,0.1249],[0.9006,0.1241],[0.903,0.1232],[0.9042,0.1222],[0.9079,0.1216],[0.9115,0.121],[0.9152,0.1203],[0.9164,0.1194],[0.9224,0.1191],[0.9236,0.1182],[0.9285,0.1178],[0.9309,0.1171],[0.9333,0.1164],[0.9358,0.1157],[0.937,0.1149],[0.9382,0.114],[0.9394,0.1132],[0.9406,0.1124],[0.943,0.1118],[0.9467,0.1113],[0.9515,0.111],[0.9552,0.1105],[0.9612,0.1103],[0.9624,0.1096],[0.9624,0.1088],[0.9624,0.1079],[0.9624,0.1071],[0.9624,0.1063],[0.9636,0.1056],[0.9661,0.1051],[0.9673,0.1044],[0.9673,0.1036],[0.9685,0.103],[0.9721,0.1026],[0.9758,0.1023],[0.9794,0.1019],[0.9806,0.1013],[0.9855,0.1011],[0.9867,0.1005],[0.9891,0.1],[0.9903,0.0995],[0.9915,0.0989],[0.9952,0.0986],[0.9976,0.0982],[0.9988,0.0976],[1.0,0.0971]]},"Logistic regression + interaction flags":{"roc":[[0.0,0.0],[0.001,0.0048],[0.0018,0.0133],[0.0027,0.0206],[0.0031,0.0279],[0.0036,0.0448],[0.004,0.0509],[0.0046,0.0606],[0.0053,0.0679],[0.0059,0.0727],[0.0068,0.0824],[0.0077,0.0921],[0.0085,0.0994],[0.0089,0.1091],[0.0095,0.1139],[0.01,0.12],[0.0106,0.1273],[0.0121,0.1321],[0.0126,0.1418],[0.0136,0.1515],[0.0143,0.1648],[0.0156,0.1782],[0.0163,0.1855],[0.0167,0.2],[0.0172,0.2061],[0.0176,0.2145],[0.0185,0.2327],[0.0194,0.2461],[0.0203,0.2521],[0.0208,0.2606],[0.0212,0.2703],[0.0218,0.2812],[0.0225,0.2861],[0.0229,0.3042],[0.0236,0.3127],[0.0249,0.32],[0.0253,0.3297],[0.0257,0.3382],[0.027,0.3479],[0.0278,0.3539],[0.0283,0.3648],[0.0293,0.3745],[0.0298,0.3867],[0.0302,0.4012],[0.0309,0.4109],[0.0315,0.4194],[0.0323,0.4303],[0.0335,0.4339],[0.0343,0.4412],[0.035,0.463],[0.0357,0.4727],[0.0365,0.4824],[0.0371,0.4885],[0.0375,0.4945],[0.0386,0.5067],[0.0391,0.5188],[0.0397,0.5321],[0.0401,0.5394],[0.0407,0.5467],[0.041,0.5564],[0.0417,0.56],[0.0427,0.577],[0.0431,0.5867],[0.044,0.5964],[0.0446,0.6024],[0.0451,0.6194],[0.0464,0.6315],[0.0474,0.64],[0.0485,0.6485],[0.0491,0.6582],[0.0502,0.6655],[0.0508,0.6739],[0.0513,0.6824],[0.0521,0.6897],[0.0529,0.697],[0.0536,0.703],[0.059,0.7152],[0.0658,0.7188],[0.0868,0.7224],[0.0985,0.7261],[0.1067,0.7309],[0.1218,0.7345],[0.1324,0.7382],[0.1467,0.7418],[0.1553,0.7467],[0.1605,0.7503],[0.1764,0.7539],[0.1842,0.7576],[0.2023,0.7612],[0.2087,0.7661],[0.2149,0.7697],[0.2214,0.7733],[0.2365,0.777],[0.2633,0.7806],[0.3092,0.7855],[0.3311,0.7891],[0.3363,0.7927],[0.3536,0.7988],[0.3633,0.8036],[0.367,0.8073],[0.3745,0.8109],[0.379,0.8145],[0.3904,0.8182],[0.4004,0.8242],[0.4043,0.8279],[0.4357,0.8315],[0.444,0.8352],[0.4558,0.8388],[0.4636,0.8436],[0.4692,0.8485],[0.4756,0.8521],[0.4814,0.8558],[0.4937,0.8594],[0.502,0.8642],[0.5197,0.8679],[0.5256,0.8703],[0.536,0.8739],[0.5524,0.8788],[0.582,0.8824],[0.5874,0.8861],[0.5984,0.8897],[0.6073,0.8933],[0.6337,0.897],[0.6517,0.9006],[0.6795,0.9042],[0.685,0.9079],[0.693,0.9127],[0.711,0.9164],[0.7287,0.92],[0.7436,0.9236],[0.7521,0.9273],[0.7597,0.9309],[0.7745,0.9345],[0.7914,0.9382],[0.8017,0.9418],[0.8096,0.9455],[0.8171,0.9503],[0.824,0.9539],[0.836,0.9576],[0.8427,0.9612],[0.859,0.9648],[0.8693,0.9685],[0.89,0.9721],[0.8946,0.9758],[0.9257,0.9794],[0.9389,0.9842],[0.9554,0.9879],[0.9689,0.9915],[0.9849,0.9964],[1.0,1.0]],"pr":[[0.0,1.0],[0.0364,0.5263],[0.0788,0.5702],[0.1176,0.5673],[0.1515,0.5482],[0.1915,0.5544],[0.2388,0.576],[0.2812,0.5815],[0.32,0.5789],[0.3612,0.5809],[0.4048,0.586],[0.4412,0.5805],[0.4861,0.5863],[0.5309,0.5911],[0.5721,0.5915],[0.6182,0.5965],[0.6521,0.5899],[0.6897,0.5872],[0.7152,0.575],[0.7176,0.5466],[0.7224,0.5228],[0.7224,0.4979],[0.7224,0.4753],[0.7248,0.4561],[0.7285,0.4393],[0.7309,0.4229],[0.7309,0.4066],[0.7333,0.3929],[0.7358,0.3801],[0.7382,0.3682],[0.7406,0.3571],[0.7442,0.3473],[0.7479,0.3381],[0.7515,0.3294],[0.7539,0.3208],[0.7576,0.3131],[0.76,0.3054],[0.7612,0.2976],[0.7612,0.2898],[0.7648,0.2837],[0.7685,0.2779],[0.7733,0.2729],[0.7733,0.2664],[0.7758,0.261],[0.777,0.2555],[0.7782,0.2502],[0.7794,0.2451],[0.7806,0.2403],[0.7806,0.2353],[0.7806,0.2305],[0.7818,0.2262],[0.7855,0.2228],[0.7855,0.2185],[0.7867,0.2147],[0.7867,0.2107],[0.7879,0.2072],[0.7903,0.2041],[0.7952,0.2018],[0.7952,0.1983],[0.7988,0.1958],[0.8024,0.1935],[0.8061,0.1911],[0.8097,0.1889],[0.8145,0.187],[0.817,0.1847],[0.8206,0.1826],[0.8267,0.1812],[0.8291,0.179],[0.8291,0.1764],[0.8303,0.1741],[0.8303,0.1716],[0.8339,0.1699],[0.8364,0.168],[0.8388,0.1662],[0.84,0.1642],[0.8461,0.1632],[0.8497,0.1617],[0.8545,0.1605],[0.857,0.1589],[0.8606,0.1576],[0.8642,0.1563],[0.8655,0.1545],[0.8679,0.1531],[0.8691,0.1514],[0.8727,0.1503],[0.8764,0.1491],[0.8776,0.1476],[0.8776,0.1459],[0.8812,0.1448],[0.8812,0.1432],[0.8812,0.1416],[0.8812,0.1401],[0.8861,0.1393],[0.8873,0.138],[0.8909,0.1371],[0.8945,0.1362],[0.8945,0.1348],[0.897,0.1337],[0.897,0.1324],[0.8982,0.1312],[0.9006,0.1302],[0.9018,0.1291],[0.9018,0.1279],[0.903,0.1268],[0.9042,0.1257],[0.9055,0.1247],[0.9115,0.1244],[0.9127,0.1234],[0.9139,0.1224],[0.9176,0.1217],[0.9188,0.1208],[0.9188,0.1197],[0.9224,0.1191],[0.9224,0.1181],[0.9236,0.1172],[0.9297,0.1169],[0.9333,0.1164],[0.9333,0.1154],[0.9358,0.1147],[0.9382,0.114],[0.9382,0.1131],[0.9406,0.1124],[0.943,0.1118],[0.9479,0.1115],[0.9515,0.111],[0.9552,0.1105],[0.9564,0.1098],[0.9588,0.1092],[0.9612,0.1086],[0.9648,0.1082],[0.9661,0.1075],[0.9697,0.1071],[0.9697,0.1062],[0.9697,0.1054],[0.9733,0.105],[0.977,0.1047],[0.977,0.1039],[0.977,0.1031],[0.9794,0.1026],[0.9806,0.102],[0.983,0.1016],[0.9842,0.101],[0.9855,0.1004],[0.9879,0.0999],[0.9879,0.0992],[0.9927,0.099],[0.9927,0.0983],[0.9964,0.098],[0.9976,0.0975],[1.0,0.0971]]},"Gradient boosting (raw features)":{"roc":[[0.0,0.0],[0.0009,0.0048],[0.0014,0.0121],[0.0018,0.0194],[0.0025,0.023],[0.0035,0.0315],[0.0042,0.0364],[0.0047,0.0473],[0.0056,0.057],[0.006,0.0691],[0.0066,0.0788],[0.007,0.0861],[0.0076,0.0933],[0.0087,0.0994],[0.0093,0.1091],[0.0098,0.1127],[0.0109,0.1164],[0.0122,0.1285],[0.0129,0.1358],[0.0136,0.1442],[0.0143,0.1552],[0.015,0.1733],[0.0156,0.1891],[0.0163,0.2012],[0.0167,0.2048],[0.0176,0.2133],[0.0184,0.2267],[0.0189,0.2303],[0.0199,0.2364],[0.0206,0.2509],[0.0212,0.2582],[0.0221,0.2679],[0.0225,0.2727],[0.0235,0.2885],[0.0244,0.2921],[0.0249,0.3091],[0.0253,0.3188],[0.0264,0.3285],[0.0272,0.3467],[0.0276,0.3539],[0.0284,0.3685],[0.0294,0.377],[0.0304,0.3818],[0.0311,0.3915],[0.0317,0.3988],[0.0321,0.4109],[0.0327,0.4158],[0.0334,0.4303],[0.0341,0.4424],[0.0348,0.4521],[0.0358,0.4679],[0.0362,0.48],[0.0369,0.497],[0.0373,0.5042],[0.0377,0.5115],[0.0382,0.5212],[0.0388,0.5358],[0.0397,0.5406],[0.0404,0.5479],[0.0412,0.5552],[0.0417,0.56],[0.0425,0.5648],[0.0429,0.5733],[0.0434,0.5782],[0.0442,0.5891],[0.0447,0.6061],[0.0455,0.617],[0.0466,0.6255],[0.0472,0.64],[0.0477,0.6436],[0.0485,0.6533],[0.0491,0.6667],[0.0496,0.6812],[0.0508,0.6873],[0.0513,0.6958],[0.0524,0.6994],[0.0539,0.703],[0.0551,0.7079],[0.0577,0.7127],[0.0715,0.7164],[0.0787,0.7224],[0.0924,0.7273],[0.1182,0.7309],[0.122,0.7358],[0.1298,0.7394],[0.1464,0.743],[0.1513,0.7479],[0.1557,0.7515],[0.1711,0.7552],[0.1777,0.76],[0.1885,0.7636],[0.2149,0.7673],[0.2272,0.7721],[0.2387,0.7758],[0.2529,0.7794],[0.2556,0.7842],[0.2575,0.7867],[0.271,0.7903],[0.2817,0.7952],[0.2913,0.7988],[0.2982,0.8024],[0.3118,0.8073],[0.3359,0.8109],[0.3532,0.8145],[0.3626,0.8182],[0.388,0.8218],[0.4177,0.8255],[0.4289,0.8303],[0.438,0.8339],[0.4463,0.8376],[0.4624,0.8424],[0.4714,0.8461],[0.4779,0.8497],[0.5028,0.8545],[0.5148,0.8582],[0.5201,0.8618],[0.5355,0.8667],[0.5493,0.8703],[0.5603,0.8739],[0.5659,0.8788],[0.5773,0.8824],[0.5936,0.8861],[0.5995,0.8897],[0.6141,0.8921],[0.619,0.897],[0.6276,0.9006],[0.641,0.9042],[0.6633,0.9103],[0.6839,0.9139],[0.6872,0.9176],[0.6952,0.9224],[0.7036,0.9261],[0.7158,0.9285],[0.7504,0.9333],[0.7668,0.937],[0.773,0.9406],[0.782,0.9455],[0.8052,0.9491],[0.8124,0.9527],[0.8216,0.9576],[0.845,0.9612],[0.8568,0.9661],[0.8735,0.9709],[0.8956,0.9745],[0.9059,0.9782],[0.9212,0.983],[0.9527,0.9867],[0.9741,0.9903],[0.9802,0.9964],[1.0,1.0]],"pr":[[0.0,1.0],[0.0339,0.4912],[0.0776,0.5614],[0.1139,0.5497],[0.1491,0.5395],[0.1964,0.5684],[0.2339,0.5643],[0.2727,0.5639],[0.3176,0.5746],[0.3624,0.5817],[0.3976,0.5744],[0.4424,0.5812],[0.4885,0.5883],[0.537,0.597],[0.5709,0.5895],[0.6158,0.5935],[0.6558,0.5926],[0.6958,0.5918],[0.7115,0.5716],[0.7152,0.5443],[0.7176,0.5188],[0.72,0.4958],[0.7261,0.4773],[0.7273,0.4573],[0.7285,0.439],[0.7297,0.4222],[0.7309,0.4066],[0.7345,0.3935],[0.7382,0.3813],[0.7418,0.37],[0.743,0.3583],[0.7455,0.3479],[0.7515,0.3397],[0.7527,0.33],[0.7564,0.3218],[0.76,0.3141],[0.7612,0.3059],[0.7648,0.2991],[0.7648,0.2912],[0.7661,0.2842],[0.7673,0.2775],[0.7685,0.2712],[0.7721,0.266],[0.7745,0.2606],[0.777,0.2555],[0.7782,0.2502],[0.7855,0.247],[0.7879,0.2424],[0.7927,0.2389],[0.7939,0.2343],[0.7964,0.2304],[0.8,0.2269],[0.8036,0.2235],[0.8036,0.2193],[0.8073,0.2162],[0.8085,0.2126],[0.8097,0.2091],[0.8109,0.2058],[0.8133,0.2028],[0.8145,0.1997],[0.817,0.197],[0.8182,0.194],[0.8194,0.1911],[0.8206,0.1884],[0.8206,0.1854],[0.8242,0.1834],[0.8242,0.1806],[0.8255,0.1782],[0.8255,0.1756],[0.8267,0.1733],[0.8315,0.1718],[0.8339,0.1699],[0.8376,0.1682],[0.8388,0.1662],[0.84,0.1642],[0.8448,0.1629],[0.8485,0.1615],[0.8509,0.1598],[0.8521,0.158],[0.8533,0.1562],[0.8533,0.1543],[0.8558,0.1528],[0.8594,0.1516],[0.863,0.1504],[0.8642,0.1488],[0.8667,0.1475],[0.8679,0.146],[0.8715,0.1449],[0.8739,0.1437],[0.8788,0.1428],[0.8812,0.1416],[0.8836,0.1405],[0.8836,0.1389],[0.8873,0.138],[0.8897,0.1369],[0.8921,0.1358],[0.8945,0.1347],[0.8994,0.1341],[0.9018,0.1331],[0.9042,0.1321],[0.9055,0.1309],[0.9055,0.1296],[0.9067,0.1285],[0.9115,0.128],[0.9127,0.1269],[0.9139,0.1259],[0.9188,0.1254],[0.9224,0.1247],[0.9261,0.124],[0.9285,0.1232],[0.9297,0.1222],[0.9297,0.1211],[0.9309,0.1202],[0.9321,0.1193],[0.9321,0.1182],[0.9345,0.1175],[0.9345,0.1165],[0.9394,0.1161],[0.9418,0.1154],[0.9455,0.1149],[0.9467,0.1141],[0.9479,0.1133],[0.9491,0.1125],[0.9527,0.112],[0.9564,0.1115],[0.9588,0.1109],[0.9588,0.11],[0.96,0.1093],[0.9636,0.1089],[0.9661,0.1083],[0.9673,0.1076],[0.9673,0.1068],[0.9709,0.1064],[0.9733,0.1058],[0.9745,0.1052],[0.9758,0.1045],[0.9782,0.104],[0.9794,0.1034],[0.9818,0.1029],[0.983,0.1023],[0.9855,0.1018],[0.9867,0.1012],[0.9867,0.1005],[0.9879,0.0999],[0.9891,0.0993],[0.9903,0.0988],[0.9952,0.0986],[0.9976,0.0982],[0.9988,0.0976],[1.0,0.0971]]}},"calibration":[{"predicted":0.0182,"actual":0.0308,"n":195},{"predicted":0.0261,"actual":0.0292,"n":2602},{"predicted":0.0345,"actual":0.0314,"n":3378},{"predicted":0.0438,"actual":0.0367,"n":1116},{"predicted":0.0548,"actual":0.0293,"n":205},{"predicted":0.4726,"actual":0.5408,"n":98},{"predicted":0.5551,"actual":0.6015,"n":542},{"predicted":0.6327,"actual":0.5838,"n":334}],"odds_ratios":[{"feature":"promo_premium_low_usage","comparison":"if present vs absent","odds_ratio":47.323,"direction":"raises churn"},{"feature":"billing_repeat","comparison":"if present vs absent","odds_ratio":33.47,"direction":"raises churn"},{"feature":"last_ticket_topic = Account","comparison":"vs No ticket","odds_ratio":1.322,"direction":"raises churn"},{"feature":"plan_type = Free","comparison":"vs Basic","odds_ratio":1.289,"direction":"raises churn"},{"feature":"last_ticket_topic = Content","comparison":"vs No ticket","odds_ratio":1.278,"direction":"raises churn"},{"feature":"last_ticket_topic = Billing","comparison":"vs No ticket","odds_ratio":1.263,"direction":"raises churn"},{"feature":"signup_channel = iOS","comparison":"vs Web","odds_ratio":0.855,"direction":"lowers churn"},{"feature":"age_group = 35-49","comparison":"vs 25-34","odds_ratio":0.861,"direction":"lowers churn"},{"feature":"content_mix = Low-usage","comparison":"vs Balanced","odds_ratio":0.864,"direction":"lowers churn"},{"feature":"plan_type = Family","comparison":"vs Basic","odds_ratio":1.157,"direction":"raises churn"},{"feature":"plan_type = Premium","comparison":"vs Basic","odds_ratio":1.152,"direction":"raises churn"},{"feature":"content_mix = Music-heavy","comparison":"vs Balanced","odds_ratio":0.902,"direction":"lowers churn"},{"feature":"last_ticket_topic = Playback","comparison":"vs No ticket","odds_ratio":0.907,"direction":"lowers churn"},{"feature":"tenure_months","comparison":"per 1 standard deviation increase","odds_ratio":0.918,"direction":"lowers churn"},{"feature":"payment_method = PayPal","comparison":"vs Credit card","odds_ratio":1.086,"direction":"raises churn"},{"feature":"avg_weekly_hours","comparison":"per 1 standard deviation increase","odds_ratio":0.933,"direction":"lowers churn"},{"feature":"age_group = 50 plus","comparison":"vs 25-34","odds_ratio":1.064,"direction":"raises churn"},{"feature":"signup_channel = Partner promo","comparison":"vs Web","odds_ratio":1.044,"direction":"raises churn"},{"feature":"content_mix = Podcast-heavy","comparison":"vs Balanced","odds_ratio":0.964,"direction":"lowers churn"},{"feature":"payment_method = Debit","comparison":"vs Credit card","odds_ratio":1.033,"direction":"raises churn"},{"feature":"signup_channel = Android","comparison":"vs Web","odds_ratio":1.028,"direction":"raises churn"},{"feature":"support_tickets_90d","comparison":"per 1 standard deviation increase","odds_ratio":0.98,"direction":"lowers churn"},{"feature":"age_group = Under 25","comparison":"vs 25-34","odds_ratio":1.016,"direction":"raises churn"},{"feature":"payment_method = Gift card","comparison":"vs Credit card","odds_ratio":1.006,"direction":"raises churn"}],"metrics":{"Logistic regression (raw features)":{"roc_auc":0.8231,"pr_auc":0.4178,"brier":0.0685,"top_decile_churn_rate":0.4941,"top_decile_lift":5.09,"top_decile_share_of_churners_captured":0.5091},"Logistic regression + interaction flags":{"roc_auc":0.8337,"pr_auc":0.4648,"brier":0.0561,"top_decile_churn_rate":0.5941,"top_decile_lift":6.12,"top_decile_share_of_churners_captured":0.6121},"Gradient boosting (raw features)":{"roc_auc":0.8365,"pr_auc":0.4644,"brier":0.0586,"top_decile_churn_rate":0.5929,"top_decile_lift":6.11,"top_decile_share_of_churners_captured":0.6109}}},"recommendations":{"model":"gemini-3.8-flash","validation_warnings":[],"executive_summary":"SonicWave's monthly churn is heavily concentrated in just two high-risk groups representing 11.8% of the subscriber base (1,004 subscribers) but driving 72.2% ($6,613.99) of the total $9,159.82 monthly revenue at risk. The single largest exposure is segment S2 (repeat billing complaints), which accounts for 682 subscribers and $4,071.39 in monthly revenue at risk (44.45% of total risk), where churn jumps to 56.45% only after a second billing ticket. The second major exposure is segment S1 (partner-promo signups on Premium with low usage), which accounts for 322 subscribers, a 63.66% churn rate, and $2,542.60 in monthly revenue at risk (27.76% of total risk). In contrast, the remaining 7,496 subscribers in baseline segment S3 churn at a healthy 3.14% rate ($2,545.84 at risk). By focusing operational intervention on billing dispute escalation and onboarding re-engagement for promo acquisitions, SonicWave can protect substantial revenue without altering core plan pricing or features.","segment_plans":[{"segment_id":"S2","segment_name":"Repeat billing complaints","priority_rank":1,"priority_rationale":"Ranked #1 because it represents the largest share of total revenue at risk ($4,071.39/month, or 44.45% of company-wide at-risk revenue) across 682 subscribers with 383.3 expected churners. Churn is tied to an addressable operational breakdown where customer frustration spikes specifically after a second unresolved billing inquiry.","root_cause_hypothesis":"Subscribers experience unresolved billing discrepancies or friction, where failing to resolve the issue on the initial contact causes acute customer dissatisfaction and drives cancellation.","evidence":["Segment S2 predicted churn is 56.21% and actual churn is 56.45%, representing a 5.79 lift versus the overall 9.71% baseline.","Odds ratio for the billing_repeat interaction feature is 33.47 in the logistic regression model.","Chart 03 shows that 1 billing ticket has an expected churn rate of only 5% (n=847), but churn spikes to 57% at 2 tickets (n=547) and 53% at 3+ tickets (n=135).","Repeat tickets in other categories do not spike churn (Account is 10%, Content is 7%, Playback is 6% at 2 tickets in Chart 03)."],"actions":[{"title":"Establish Senior Billing Escalation Routing","description":"Configure the customer support ticketing platform to automatically detect any customer submitting a second ticket within 90 days tagged with 'Billing' and route them immediately to a specialized senior billing specialist. Empower agents with discretionary credit authority to resolve disputed charges on the spot.","owner":"Support","effort":"Medium","timeline":"3 weeks","assumed_churn_reduction":0.25,"estimated_churners_saved":95.83,"estimated_monthly_revenue_saved":1017.85,"kpi":"Second-ticket resolution rate and 60-day post-ticket churn rate"},{"title":"Audit and Simplify Billing Statements and Invoicing","description":"Conduct a technical audit of payment processing, invoice clarity, and recurring renewal notifications to identify recurring charge errors or confusing statement line items. Implement clear itemized receipts and proactive renewal notifications.","owner":"Billing","effort":"Medium","timeline":"1 quarter","assumed_churn_reduction":0.15,"estimated_churners_saved":57.5,"estimated_monthly_revenue_saved":610.71,"kpi":"Inbound billing ticket volume per 1,000 subscribers"}],"experiment":{"hypothesis":"Proactive senior routing and immediate resolution on second billing tickets will reduce segment churn from ~56% to below 42%.","design":"Randomize 682 subscribers entering repeat billing ticket status (2 tickets in 90 days with Billing as topic) 50/50 into Control (standard ticket queue) and Treatment (immediate senior queue routing with fast resolution and settlement credit) over a 60-day window.","success_metric":"60-day retention rate of repeat billing ticket submitters"}},{"segment_id":"S1","segment_name":"Partner-promo Premium, low usage","priority_rank":2,"priority_rationale":"Ranked #2 because it concentrates $2,542.60/month in revenue at risk (27.76% of total at-risk revenue) and 195.7 expected churners across just 322 subscribers, with an actual churn rate of 63.66%. The cohort is smaller than S2 but has the highest churn rate in the company.","root_cause_hypothesis":"Subscribers who join through third-party promotional partnerships receive Premium access without establishing regular listening habits, leading to perceived lack of value when the promotional benefit ends or regular billing commences.","evidence":["Segment S1 actual churn rate is 63.66% with an expected 195.7 churners out of 322 subscribers (6.26 lift vs overall).","The promo_premium_low_usage interaction feature has the highest odds ratio in the churn model at 47.323.","Chart 04 demonstrates that Partner promo subscribers with Low-usage churn at 52% (n=435 in Phase 1 cohort), whereas Partner promo subscribers with Balanced, Music-heavy, or Podcast-heavy usage churn at baseline rates of 7%.","100% of S1 subscribers are on the Premium tier and 100% have Low-usage content mix, over-represented by 2.5x and 6.66x respectively."],"actions":[{"title":"Trigger Automated In-App Habit-Building Onboarding","description":"Deploy automated onboarding push notifications and emails for Partner-promo signups who log fewer than 3 hours of listening during their first 14 days, highlighting tailored playlist creation, offline downloads, and podcast discovery. Direct users into interactive quick-start content carousels.","owner":"Product","effort":"Medium","timeline":"4 weeks","assumed_churn_reduction":0.2,"estimated_churners_saved":39.14,"estimated_monthly_revenue_saved":508.52,"kpi":"Percentage of partner-promo users migrating from Low-usage to Balanced or Music/Podcast-heavy listening mix"},{"title":"Introduce Low-Engagement Plan Downgrade Flows","description":"Offer low-usage partner promo subscribers approaching their renewal an option to step down to the Basic tier rather than canceling entirely. Provide clear plan comparisons emphasizing that Basic retains their library and playlists at a lower cost.","owner":"Marketing","effort":"Low","timeline":"2 weeks","assumed_churn_reduction":0.1,"estimated_churners_saved":19.57,"estimated_monthly_revenue_saved":254.26,"kpi":"Cancellation flow downgrade acceptance rate versus full cancellation"}],"experiment":{"hypothesis":"Early guided onboarding sequences focused on genre selection and daily listening cues will lift weekly hours from low-usage levels and reduce churn.","design":"A/B test newly acquired partner-promo Premium subscribers (split 50/50, ~160 subscribers per arm) testing standard welcome emails vs personalized guided listening journeys over a 60-day period.","success_metric":"Share of cohort exceeding 5 listening hours per week and 90-day churn rate"}},{"segment_id":"S3","segment_name":"Everyone else (baseline)","priority_rank":3,"priority_rationale":"Ranked #3 because S3 represents healthy baseline operational churn (3.14% actual churn rate, 0.34 lift vs overall). While total monthly revenue at risk is $2,545.84, it is dispersed across 7,496 subscribers, meaning high-cost retention interventions would yield negligible return.","root_cause_hypothesis":"Subscribers churn at a normal, unavoidable background rate caused by ordinary life changes, payment card expirations, and casual shifts in discretionary spending.","evidence":["Segment S3 actual churn rate is 3.14% across 7,496 subscribers, with predicted churn at 3.31%.","Caveats confirm that subscribers outside high-risk segments churn at ~3% and the model identifies no further patterns or drivers in this segment.","Subscriber tenure averages 12.0 months with steady median listening of 8.0 weekly hours."],"actions":[{"title":"Automate Account Dunning and Card Expiry Reminders","description":"Implement passive dunning logic and automated pre-expiration payment email reminders 15 days before credit or debit cards expire. Provide direct one-click payment detail updating links.","owner":"Billing","effort":"Low","timeline":"2 weeks","assumed_churn_reduction":0.05,"estimated_churners_saved":12.41,"estimated_monthly_revenue_saved":127.29,"kpi":"Involuntary passive churn rate on card expiration"}],"experiment":{"hypothesis":"Pre-expiration billing notifications will modestly curb involuntary churn among baseline users without causing user friction.","design":"Run a 90-day test on expiring cards across 2,000 baseline subscribers randomized into standard retry processing vs pre-dunning notification sequence.","success_metric":"Successful renewal rate for payment cards expiring within the test window"}}],"chart_observations":[{"chart":"01_churn_by_segment.png","observation":"Univariate churn highlights that demographic factors (Age: Under 25 at 9%, 25-34 at 10%, 35-49 at 10%, 50 plus at 10%) and payment methods (Credit card at 9%, Debit, PayPal, Gift card at 10%) show negligible churn variance. The significant univariate spikes appear only in Content mix (Low-usage at 23%), Signup channel (Partner promo at 22%), Last ticket topic (Billing at 28%), and Plan (Premium at 13%)."},{"chart":"03_heatmap_tickets_x_topic.png","observation":"Reveals that high ticket volume alone does not trigger churn; support friction is isolated to billing. Customers with 1 billing ticket churn at only 5% (n=847), but churn drastically jumps to 57% at 2 tickets (n=547) and 53% at 3+ tickets (n=135). In contrast, 2 tickets under Account (10%), Content (7%), and Playback (6%) show churn rates at or below the 9.7% overall baseline."},{"chart":"04_heatmap_channel_x_content_mix.png","observation":"Reveals that partner promo and low usage are benign on their own but catastrophic together. Partner promo subscribers who maintain Balanced (7%), Music-heavy (7%), or Podcast-heavy (7%) content mixes have baseline churn. Similarly, Low-usage users entering via Web (7%), iOS (7%), or Android (8%) show normal churn. The acute 52% churn (n=435) is strictly confined to the Partner promo and Low-usage intersection."},{"chart":"07_revenue_lost_by_plan.png","observation":"Premium accounts for $5,820/month of lost revenue (63.7% of all lost revenue, and 13% of total Premium plan revenue), dwarfing Family ($1,842/month, 8% of revenue) and Basic ($1,478/month, 7% of revenue). This confirms why Premium revenue protection must be the primary focus."},{"chart":"09_churn_drivers_odds_ratios.png","observation":"The interaction flags promo_premium_low_usage (OR 47.32) and billing_repeat (OR 33.47) completely dominate the logistic model. Standalone main effects such as Free plan (OR 1.29), Account ticket (OR 1.32), Content ticket (OR 1.28), and single Billing ticket (OR 1.26) exhibit marginal associations once interaction flags are modeled."},{"chart":"11_risk_segments.png","observation":"Illustrates the heavy operational concentration: S1 (322 subscribers, 61% predicted churn, $2,543/mo risk) and S2 (682 subscribers, 56% predicted churn, $4,071/mo risk) collectively represent only 12% of SonicWave subscribers but capture 70% of all expected churners."}],"what_not_to_do":["Do not discount or restructure the general Premium plan pricing or features. Although Premium shows a 13% raw churn rate in Chart 01 and accounts for $5,820/mo in lost revenue in Chart 07, the caveats prove that outside the partner-promo low-usage interaction, Premium subscribers churn at standard baseline rates.","Do not deploy costly re-engagement campaigns or retention discounts across segment S3. With an actual churn rate of 3.14% across 7,496 subscribers, this segment represents unavoidable background churn, and broad campaigns would erode margins.","Do not alter customer service protocols for non-billing repeat tickets. Chart 03 demonstrates that subscribers with 2+ tickets in Account (10%), Content (7%), or Playback (6%) have low churn; altering their workflows would waste operational capacity.","Do not terminate partner acquisition channels outright. Partner promo subscribers who achieve Balanced (7%), Music-heavy (7%), or Podcast-heavy (7%) usage churn at normal baseline rates; the issue is onboarding engagement, not the channel itself."],"risks_and_caveats":["Drivers identified by the model are statistical associations from historical data, not proven causal relationships; all proposed operational changes should be validated via A/B testing before full rollout.","The 28 subscribers who possess both billing_repeat and promo_premium_low_usage churn at approximately 54%, demonstrating that these risk factors overlap rather than compound additively.","Premium plan churn is isolated to specific partner-promo low-engagement cohorts rather than intrinsic dissatisfaction with Premium features or pricing.","Segment S3's low 3.14% churn indicates natural market turnover where additional predictive modeling finds no further actionable patterns."]}};
+
+/* ---------- helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pct = (x, d = 0) => (x == null ? "—" : (x * 100).toFixed(d) + "%");
+const money = (x) => "$" + Math.round(x).toLocaleString("en-US");
+const int = (x) => Math.round(x).toLocaleString("en-US");
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function text(parent, x, y, str, attrs = {}) {
+  const t = svgEl("text", { x, y, fill: "var(--ink-2)", "font-size": 12, ...attrs }, parent);
+  t.textContent = str;
+  return t;
+}
+const tip = $("#tip");
+function bindTip(el, html) {
+  el.addEventListener("pointerenter", () => { tip.innerHTML = html; tip.classList.add("on"); });
+  el.addEventListener("pointermove", (e) => {
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX + 14, y = e.clientY + 14;
+    if (x + w > innerWidth - 8) x = e.clientX - w - 14;
+    if (y + h > innerHeight - 8) y = e.clientY - h - 14;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  });
+  el.addEventListener("pointerleave", () => tip.classList.remove("on"));
+}
+function widthOf(el) { return Math.max(280, Math.floor(el.clientWidth)); }
+function measure(str, size = 12) { return str.length * size * 0.56; }
+
+/* ---------- header + KPIs ---------- */
+function renderHeader() {
+  const seg = D.segments, ds = seg.dataset, m = seg.model.metrics;
+  const high = seg.segments.filter((s) => s.risk_tier === "High");
+  const highShare = high.reduce((a, s) => a + s.share_of_base, 0);
+  const highChurners = high.reduce((a, s) => a + s.expected_churners, 0);
+  const allChurners = seg.segments.reduce((a, s) => a + s.expected_churners, 0);
+  const recs = D.recommendations;
+  const saved = recs ? recs.segment_plans.reduce((a, p) => a + p.actions.reduce((b, x) => b + x.estimated_monthly_revenue_saved, 0), 0) : null;
+  const kpis = [
+    { v: int(ds.subscribers), l: "Subscribers", d: "12 attributes each" },
+    { v: pct(ds.overall_churn_rate, 1), l: "Overall churn rate", d: int(ds.subscribers * ds.overall_churn_rate) + " subscribers churned" },
+    { v: money(ds.expected_monthly_revenue_at_risk), l: "Monthly revenue at risk", d: pct(ds.expected_monthly_revenue_at_risk / ds.total_monthly_revenue, 1) + " of " + money(ds.total_monthly_revenue), alert: true },
+    { v: pct(highChurners / allChurners), l: "Expected churners in high-risk groups", d: "Those groups are " + pct(highShare) + " of subscribers" },
+    { v: m.roc_auc.toFixed(3), l: "Model ROC-AUC", d: "Top 10% by risk churn " + m.top_decile_lift + "× the average" },
+  ];
+  if (saved != null) kpis.push({ v: money(saved), l: "Est. monthly revenue saved", d: "If Gemini's plan works as assumed" });
+  $("#kpis").innerHTML = kpis.map((k) => `<div class="kpi${k.alert ? " alert" : ""}"><span class="v">${esc(k.v)}</span><span class="l">${esc(k.l)}</span><span class="d">${esc(k.d)}</span></div>`).join("");
+  $("#meta").innerHTML = `<span>Model: ${esc(seg.model.type)}</span><span>Recommendations: ${recs ? esc(recs.model) : "not generated yet"}</span><span>Built ${esc(D.built_at)}</span>`;
+  $("#step-data").textContent = `${int(ds.subscribers)} subscribers, ${pct(ds.overall_churn_rate, 1)} churned`;
+  $("#step-model").textContent = `ROC-AUC ${m.roc_auc.toFixed(3)} · ${seg.segments.length} risk segments`;
+  $("#step-plan").textContent = recs ? `${recs.segment_plans.reduce((a, p) => a + p.actions.length, 0)} actions across ${recs.segment_plans.length} segments` : "Not run yet";
+  $("#built").textContent = "Dashboard built " + D.built_at + " by build_dashboard.py from the pipeline outputs.";
+}
+
+/* ---------- horizontal bar chart (churn by attribute) ---------- */
+let currentAttr = "plan_type";
+function renderAttrChips() {
+  const box = $("#attr-chips");
+  box.innerHTML = Object.entries(D.phase1.attributes).map(([k, a]) =>
+    `<button class="chip" type="button" data-k="${k}" aria-pressed="${k === currentAttr}">${esc(a.label.replace(" (last 90 days)", "").replace(" (quintile)", ""))}</button>`).join("");
+  box.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    currentAttr = b.dataset.k;
+    box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    renderAttrChart();
+  }));
+}
+function renderAttrChart() {
+  const el = $("#attr-chart"); el.innerHTML = "";
+  const a = D.phase1.attributes[currentAttr], overall = D.phase1.overall;
+  const W = widthOf(el), rowH = 40, top = 8, bottom = 26;
+  const labelW = Math.min(140, Math.max(...a.rows.map((r) => measure(r.label, 13))) + 12);
+  const right = 44, x0 = labelW, x1 = W - right;
+  const max = Math.max(overall * 1.6, ...a.rows.map((r) => r.rate)) * 1.08;
+  const xs = (v) => x0 + (v / max) * (x1 - x0);
+  const H = top + a.rows.length * rowH + bottom;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `Churn rate by ${a.label}` }, el);
+  const step = max > 0.3 ? 0.1 : max > 0.15 ? 0.05 : 0.02;
+  for (let t = 0; t <= max + 1e-9; t += step) {
+    svgEl("line", { x1: xs(t), x2: xs(t), y1: top, y2: H - bottom, stroke: "var(--grid)" }, svg);
+    text(svg, xs(t), H - 8, pct(t), { "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" });
+  }
+  a.rows.forEach((r, i) => {
+    const y = top + i * rowH, hi = r.rate > overall * 1.15;
+    text(svg, x0 - 10, y + 17, r.label, { "text-anchor": "end", "font-size": 13, fill: "var(--ink)" });
+    text(svg, x0 - 10, y + 31, "n=" + int(r.n), { "text-anchor": "end", "font-size": 11, fill: "var(--muted)" });
+    const bw = Math.max(2, xs(r.rate) - x0);
+    svgEl("rect", { x: x0, y: y + 8, width: bw, height: 24, rx: 4, fill: hi ? "var(--accent)" : "var(--bar-muted)" }, svg);
+    text(svg, xs(r.rate) + 6, y + 25, pct(r.rate), { "font-size": 12.5, fill: "var(--ink)", "font-weight": hi ? 600 : 400, class: "num" });
+    const hit = svgEl("rect", { x: 0, y, width: W, height: rowH, fill: "transparent" }, svg);
+    bindTip(hit, `<b>${esc(a.label)}: ${esc(r.label)}</b><br>${pct(r.rate, 1)} churn · ${int(r.n)} subscribers<br>${(r.rate / overall).toFixed(2)}× the overall rate`);
+  });
+  svgEl("line", { x1: xs(overall), x2: xs(overall), y1: top - 4, y2: H - bottom, stroke: "var(--ink-2)", "stroke-dasharray": "4 3", "stroke-width": 1.2 }, svg);
+}
+
+/* ---------- heatmap ---------- */
+function heatStep(v) { return v == null ? 0 : v < 0.05 ? 0 : v < 0.1 ? 1 : v < 0.2 ? 2 : v < 0.35 ? 3 : v < 0.5 ? 4 : 5; }
+function renderHeatSelect() {
+  const sel = $("#heat-sel");
+  const names = { tickets_topic: "Tickets × ticket topic", channel_mix: "Signup channel × content mix", plan_topic: "Plan × ticket topic" };
+  sel.innerHTML = Object.keys(D.phase1.heatmaps).map((k) => `<option value="${k}">${names[k] || k}</option>`).join("");
+  sel.value = "channel_mix";
+  sel.addEventListener("change", renderHeat);
+}
+function renderHeat() {
+  const el = $("#heat-chart"); el.innerHTML = "";
+  const h = D.phase1.heatmaps[$("#heat-sel").value];
+  $("#heat-title").textContent = h.title;
+  const W = widthOf(el);
+  const labelW = Math.min(118, Math.max(...h.rows.map((r) => measure(String(r), 12.5))) + 12);
+  const top = 30, cellH = 46, gap = 3;
+  const cw = (W - labelW) / h.cols.length;
+  const H = top + h.rows.length * cellH + 4;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": h.title }, el);
+  h.cols.forEach((c, j) => {
+    const SHORT = { "Low-usage": "Low", "Balanced": "Bal.", "Music-heavy": "Music", "Podcast-heavy": "Podcast", "Partner promo": "Promo", "No ticket": "None", "Playback": "Play.", "Account": "Acct.", "Content": "Cont.", "Billing": "Bill." };
+    let label = c;
+    if (measure(label, 12) > cw - 6) label = c.replace("-heavy", "").replace("Partner promo", "Promo");
+    if (measure(label, 12) > cw - 6) label = SHORT[c] || label;
+    text(svg, labelW + j * cw + cw / 2, 18, label, { "text-anchor": "middle", fill: "var(--ink-2)" });
+  });
+  h.rows.forEach((r, i) => {
+    const y = top + i * cellH;
+    text(svg, labelW - 10, y + cellH / 2 + 4, r, { "text-anchor": "end", "font-size": 12.5, fill: "var(--ink)" });
+    h.cols.forEach((c, j) => {
+      const cell = h.cells[i][j], x = labelW + j * cw, small = cell.n < 30;
+      const s = small ? 0 : heatStep(cell.rate);
+      svgEl("rect", { x: x + gap / 2, y: y + gap / 2, width: cw - gap, height: cellH - gap, rx: 4, fill: small ? "var(--grid)" : `var(--h${s})` }, svg);
+      const ink = s >= 4 ? "var(--h-ink-hi)" : "var(--h-ink-lo)";
+      if (cell.n === 0) { text(svg, x + cw / 2, y + cellH / 2 + 4, "—", { "text-anchor": "middle", fill: "var(--muted)" }); }
+      else if (small) { text(svg, x + cw / 2, y + cellH / 2 + 4, "n=" + cell.n, { "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }); }
+      else {
+        text(svg, x + cw / 2, y + cellH / 2 + 1, pct(cell.rate), { "text-anchor": "middle", "font-size": 13.5, "font-weight": 600, fill: ink });
+        if (cw > 64) text(svg, x + cw / 2, y + cellH / 2 + 15, "n=" + int(cell.n), { "text-anchor": "middle", "font-size": 10.5, fill: ink, opacity: 0.8 });
+      }
+      const hit = svgEl("rect", { x, y, width: cw, height: cellH, fill: "transparent" }, svg);
+      bindTip(hit, `<b>${esc(h.row_label)}: ${esc(r)}<br>${esc(h.col_label)}: ${esc(c)}</b><br>` +
+        (cell.n === 0 ? "No subscribers" : small ? `${cell.n} subscribers, too few to trust` : `${pct(cell.rate, 1)} churn · ${int(cell.n)} subscribers`));
+    });
+  });
+}
+
+/* ---------- findings ---------- */
+function renderFindings() {
+  const segs = D.segments.segments;
+  const s1 = segs.find((s) => /promo/i.test(s.name)), s2 = segs.find((s) => /billing/i.test(s.name));
+  const items = [];
+  if (s2) items.push({ t: "Repeat billing complaints", b: `Subscribers whose 2nd+ ticket is about billing churn at ${pct(s2.actual_churn_rate)}. Repeat tickets on any other topic stay near normal.` });
+  if (s1) items.push({ t: "Partner-promo Premium, low usage", b: `Promo signups on Premium who barely listen churn at ${pct(s1.actual_churn_rate)}. The same promo signups on other plans churn at 2–4%.` });
+  items.push({ t: "Premium isn't the problem", b: "Premium's higher raw churn (13%) comes from the promo group above. Outside it, Premium churns like every other plan.", corr: true });
+  $("#findings").innerHTML = items.map((i) => `<div class="finding${i.corr ? " corr" : ""}"><b>${esc(i.t)}</b><span>${esc(i.b)}</span></div>`).join("");
+}
+
+/* ---------- Phase 2: metrics + curves ---------- */
+const MODEL_COLORS = ["var(--s1)", "var(--s2)", "var(--s3)"];
+let curveKind = "roc";
+function renderMetrics() {
+  const M = D.model.metrics, chosen = D.model.chosen_model;
+  const rows = Object.entries(M).map(([name, m], i) =>
+    `<tr class="${name === chosen ? "chosen" : ""}"><td><svg width="10" height="10" aria-hidden="true" style="margin-right:7px"><circle cx="5" cy="5" r="5" fill="${MODEL_COLORS[i]}"/></svg>${esc(name)}${name === chosen ? ' <span class="pill ok">chosen</span>' : ""}</td><td class="r">${m.roc_auc.toFixed(3)}</td><td class="r">${m.pr_auc.toFixed(3)}</td><td class="r">${m.brier.toFixed(4)}</td></tr>`).join("");
+  $("#metrics-tbl").innerHTML = `<thead><tr><th>Model</th><th class="r">ROC-AUC ↑</th><th class="r">PR-AUC ↑</th><th class="r">Brier ↓</th></tr></thead><tbody>${rows}</tbody>`;
+  const box = $("#curve-chips");
+  box.innerHTML = `<button class="chip" type="button" data-k="roc" aria-pressed="true">ROC curve</button><button class="chip" type="button" data-k="pr" aria-pressed="false">Precision-recall</button>`;
+  box.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    curveKind = b.dataset.k; box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); renderCurves();
+  }));
+}
+function axes(svg, x0, x1, y0, y1, xs, ys, xticks, yticks, fmtX, fmtY, xlabel, ylabel) {
+  yticks.forEach((t) => { svgEl("line", { x1: x0, x2: x1, y1: ys(t), y2: ys(t), stroke: "var(--grid)" }, svg); text(svg, x0 - 6, ys(t) + 4, fmtY(t), { "text-anchor": "end", "font-size": 11, fill: "var(--muted)" }); });
+  xticks.forEach((t) => { svgEl("line", { x1: xs(t), x2: xs(t), y1: y0, y2: y1, stroke: "var(--grid)" }, svg); text(svg, xs(t), y0 + 16, fmtX(t), { "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" }); });
+  text(svg, (x0 + x1) / 2, y0 + 32, xlabel, { "text-anchor": "middle", "font-size": 12, fill: "var(--ink-2)" });
+  text(svg, 12, (y0 + y1) / 2, ylabel, { "text-anchor": "middle", "font-size": 12, fill: "var(--ink-2)", transform: `rotate(-90 12 ${(y0 + y1) / 2})` });
+}
+function renderCurves() {
+  const el = $("#curve-chart"); el.innerHTML = "";
+  const W = widthOf(el), H = Math.round(Math.min(340, W * 0.72));
+  const x0 = 54, x1 = W - 12, y0 = H - 40, y1 = 10;
+  const xs = (v) => x0 + v * (x1 - x0), ys = (v) => y0 - v * (y0 - y1);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": curveKind === "roc" ? "ROC curves" : "Precision-recall curves" }, el);
+  const t = [0, 0.25, 0.5, 0.75, 1];
+  const roc = curveKind === "roc";
+  axes(svg, x0, x1, y0, y1, xs, ys, t, t, roc ? (v) => v.toFixed(2) : (v) => pct(v), roc ? (v) => v.toFixed(2) : (v) => pct(v),
+    roc ? "False positive rate" : "Recall (share of churners caught)", roc ? "True positive rate" : "Precision");
+  if (roc) svgEl("line", { x1: xs(0), y1: ys(0), x2: xs(1), y2: ys(1), stroke: "var(--muted)", "stroke-dasharray": "4 3" }, svg);
+  else { const b = D.segments.dataset.overall_churn_rate; svgEl("line", { x1: xs(0), x2: xs(1), y1: ys(b), y2: ys(b), stroke: "var(--muted)", "stroke-dasharray": "4 3" }, svg); text(svg, xs(0) + 4, ys(b) - 5, "random guess " + pct(b, 1), { "font-size": 11, fill: "var(--muted)" }); }
+  const names = Object.keys(D.model.curves);
+  const order = names.slice().sort((a, b) => (a === D.model.chosen_model) - (b === D.model.chosen_model));
+  order.forEach((name) => {
+    const i = names.indexOf(name), pts = D.model.curves[name][curveKind];
+    const d = pts.map((p, k) => (k ? "L" : "M") + xs(p[0]).toFixed(1) + " " + ys(p[1]).toFixed(1)).join(" ");
+    const path = svgEl("path", { d, fill: "none", stroke: MODEL_COLORS[i], "stroke-width": name === D.model.chosen_model ? 2.5 : 1.6, "stroke-linejoin": "round" }, svg);
+    const m = D.model.metrics[name];
+    bindTip(path, `<b>${esc(name)}</b><br>ROC-AUC ${m.roc_auc.toFixed(3)} · PR-AUC ${m.pr_auc.toFixed(3)}`);
+  });
+  // legend
+  const lg = svgEl("g", {}, svg);
+  names.forEach((n, i) => {
+    const ly = roc ? y0 - 14 - (names.length - 1 - i) * 18 : y1 + 8 + i * 18, lx = roc ? x1 - 8 : x1 - 8;
+    const short = n.replace("Logistic regression", "Log. reg.").replace(" (raw features)", ", raw").replace(" + interaction flags", " + flags").replace("Gradient boosting", "Grad. boosting");
+    svgEl("line", { x1: lx - short.length * 6 - 24, x2: lx - short.length * 6 - 8, y1: ly - 4, y2: ly - 4, stroke: MODEL_COLORS[i], "stroke-width": 2.5 }, lg);
+    text(lg, lx, ly, short, { "text-anchor": "end", "font-size": 11.5, fill: "var(--ink-2)" });
+  });
+}
+
+/* ---------- odds ratios ---------- */
+function renderOdds() {
+  const el = $("#odds-chart"); el.innerHTML = "";
+  const rows = D.model.odds_ratios.slice().sort((a, b) => Math.abs(Math.log(b.odds_ratio)) - Math.abs(Math.log(a.odds_ratio))).slice(0, 12);
+  const W = widthOf(el), rowH = 30, top = 4, bottom = 28;
+  const pretty = (r) => (r.feature.includes(" = ") ? r.feature.split(" = ")[1] + " " + r.comparison.replace("vs ", "(vs ") + ")" : r.feature);
+  const labelW = Math.min(W * 0.48, Math.max(...rows.map((r) => measure(pretty(r), 12))) + 10);
+  const x0 = labelW + 14, x1 = W - 54;
+  const lo = Math.log(0.5), hi = Math.log(Math.max(64, ...rows.map((r) => r.odds_ratio)));
+  const xs = (v) => x0 + ((Math.log(v) - lo) / (hi - lo)) * (x1 - x0);
+  const H = top + rows.length * rowH + bottom;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Churn drivers as odds ratios" }, el);
+  [0.5, 1, 2, 4, 8, 16, 32, 64].forEach((t) => {
+    if (t > Math.exp(hi)) return;
+    svgEl("line", { x1: xs(t), x2: xs(t), y1: top, y2: H - bottom, stroke: t === 1 ? "var(--ink-2)" : "var(--grid)" }, svg);
+    text(svg, xs(t), H - 10, "×" + t, { "text-anchor": "middle", "font-size": 11, fill: "var(--muted)" });
+  });
+  rows.forEach((r, i) => {
+    const y = top + i * rowH, up = r.odds_ratio > 1;
+    const lab = pretty(r);
+    text(svg, labelW, y + 19, lab.length > 42 ? lab.slice(0, 40) + "…" : lab, { "text-anchor": "end", "font-size": 12, fill: "var(--ink)" });
+    const a = xs(1), b = xs(r.odds_ratio);
+    svgEl("rect", { x: Math.min(a, b), y: y + 7, width: Math.max(2, Math.abs(b - a)), height: 17, rx: 3, fill: up ? "var(--risk)" : "var(--accent)" }, svg);
+    text(svg, up ? b + 5 : a + 5, y + 20, "×" + (r.odds_ratio >= 10 ? r.odds_ratio.toFixed(0) : r.odds_ratio.toFixed(2)), { "text-anchor": "start", "font-size": 11.5, fill: "var(--ink)", class: "num" });
+    const hit = svgEl("rect", { x: 0, y, width: W, height: rowH, fill: "transparent" }, svg);
+    bindTip(hit, `<b>${esc(r.feature)}</b><br>${esc(r.comparison)}<br>Odds of churn ×${r.odds_ratio} (${esc(r.direction)})`);
+  });
+}
+
+/* ---------- calibration ---------- */
+function renderCalibration() {
+  const el = $("#cal-chart"); el.innerHTML = "";
+  const W = widthOf(el), H = Math.round(Math.min(320, W * 0.66));
+  const x0 = 54, x1 = W - 12, y0 = H - 40, y1 = 10, m = 0.8;
+  const xs = (v) => x0 + (v / m) * (x1 - x0), ys = (v) => y0 - (v / m) * (y0 - y1);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Calibration chart" }, el);
+  const t = [0, 0.2, 0.4, 0.6, 0.8];
+  axes(svg, x0, x1, y0, y1, xs, ys, t, t, (v) => pct(v), (v) => pct(v), "Predicted churn probability", "Actual churn rate");
+  svgEl("line", { x1: xs(0), y1: ys(0), x2: xs(m), y2: ys(m), stroke: "var(--muted)", "stroke-dasharray": "4 3" }, svg);
+  const pts = D.model.calibration;
+  const maxN = Math.max(...pts.map((p) => p.n));
+  pts.forEach((p) => {
+    const r = 4 + 9 * Math.sqrt(p.n / maxN);
+    const c = svgEl("circle", { cx: xs(p.predicted), cy: ys(p.actual), r, fill: "var(--accent)", "fill-opacity": 0.85, stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    bindTip(c, `<b>Predicted ${pct(p.predicted, 1)}</b><br>Actual ${pct(p.actual, 1)} · ${int(p.n)} subscribers`);
+  });
+  text(svg, x1, y0 - 8, "dot size = subscribers", { "text-anchor": "end", "font-size": 11, fill: "var(--muted)" });
+}
+
+/* ---------- engineered flags + segments ---------- */
+function renderFlags() {
+  const f = D.segments.model.engineered_features;
+  const ors = Object.fromEntries(D.model.odds_ratios.map((r) => [r.feature, r.odds_ratio]));
+  $("#flags-tbl").innerHTML = `<thead><tr><th>Flag</th><th>Meaning</th><th class="r">Odds ratio</th></tr></thead><tbody>` +
+    Object.entries(f).map(([k, v]) => `<tr><td class="mono" style="font-size:12.5px">${esc(k)}</td><td>${esc(v)}</td><td class="r">${ors[k] ? "×" + ors[k].toFixed(1) : '<span class="note">correction term</span>'}</td></tr>`).join("") + "</tbody>";
+}
+function renderSegments() {
+  const segs = D.segments.segments;
+  const maxRate = Math.max(...segs.map((s) => s.predicted_churn_rate));
+  $("#segments").innerHTML = segs.map((s) => {
+    const tier = s.risk_tier.toLowerCase();
+    const traits = s.distinguishing_traits.slice(0, 3).map((t) => `<li>${esc(t.value)}: ${pct(t.share_in_segment)} of segment vs ${pct(t.share_in_population)} overall</li>`).join("");
+    return `<div class="panel seg ${tier}">
+      <div class="panel-head"><span class="eyebrow">${esc(s.segment_id)}</span><span class="pill ${tier}">${esc(s.risk_tier)} risk</span></div>
+      <h3>${esc(s.name)}</h3>
+      <div><span class="big">${pct(s.predicted_churn_rate)}</span> <span class="note">predicted churn · actual ${pct(s.actual_churn_rate, 1)}</span></div>
+      <div class="meter" aria-hidden="true"><i style="width:${(s.predicted_churn_rate / maxRate) * 100}%;background:${tier === "high" ? "var(--risk)" : "var(--bar-muted)"}"></i></div>
+      <dl>
+        <dt>Subscribers</dt><dd>${int(s.subscribers)} (${pct(s.share_of_base, 1)})</dd>
+        <dt>Expected churners</dt><dd>${int(s.expected_churners)}</dd>
+        <dt>Revenue at risk / mo</dt><dd>${money(s.expected_monthly_revenue_at_risk)} (${pct(s.share_of_total_revenue_at_risk)})</dd>
+        <dt>Lift vs overall</dt><dd>${s.lift_vs_overall}×</dd>
+      </dl>
+      ${traits ? `<ul>${traits}</ul>` : `<p class="note">No attribute stands out. This is normal background churn.</p>`}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- Phase 3 ---------- */
+function renderPlan() {
+  const R = D.recommendations, box = $("#plan-body");
+  if (!R) {
+    box.innerHTML = `<div class="empty"><b>Recommendations haven't been generated yet.</b><span>Run <span class="mono">python generate_recommendations.py</span>, then <span class="mono">python build_dashboard.py</span> to add Gemini's retention plan here.</span></div>`;
+    return;
+  }
+  const segs = Object.fromEntries(D.segments.segments.map((s) => [s.segment_id, s]));
+  const plans = R.segment_plans.slice().sort((a, b) => a.priority_rank - b.priority_rank);
+  const summary = `<div class="panel"><div class="panel-head"><h3>Executive summary</h3>${R.validation_warnings.length ? `<span class="pill high">${R.validation_warnings.length} validation warning${R.validation_warnings.length > 1 ? "s" : ""}</span>` : '<span class="pill ok">Numbers checked against the model</span>'}</div><p>${esc(R.executive_summary)}</p>
+    <div class="tbl-wrap"><table><thead><tr><th>Priority</th><th>Segment</th><th class="r">Subscribers</th><th class="r">Predicted churn</th><th class="r">At risk / mo</th><th class="r">Est. saved / mo</th></tr></thead><tbody>${plans.map((p) => {
+      const s = segs[p.segment_id] || {}, saved = p.actions.reduce((a, x) => a + x.estimated_monthly_revenue_saved, 0);
+      return `<tr><td class="num">${p.priority_rank}</td><td>${esc(p.segment_id)} ${esc(s.name || p.segment_name)}</td><td class="r">${int(s.subscribers || 0)}</td><td class="r">${pct(s.predicted_churn_rate)}</td><td class="r">${money(s.expected_monthly_revenue_at_risk || 0)}</td><td class="r" style="color:var(--good);font-weight:600">${money(saved)}</td></tr>`;
+    }).join("")}</tbody></table></div></div>`;
+  const cards = plans.map((p, idx) => {
+    const s = segs[p.segment_id] || {}, saved = p.actions.reduce((a, x) => a + x.estimated_monthly_revenue_saved, 0);
+    const actions = p.actions.map((a) => `<div class="action">
+        <div class="action-top"><b>${esc(a.title)}</b><span class="num" style="color:var(--good);font-weight:600">${money(a.estimated_monthly_revenue_saved)}/mo</span></div>
+        <p>${esc(a.description)}</p>
+        <div class="tags"><span class="tag">${esc(a.owner)}</span><span class="tag">${esc(a.effort)} effort</span><span class="tag">${esc(a.timeline)}</span><span class="tag">assumes ${pct(a.assumed_churn_reduction)} fewer churners</span></div>
+        <div class="kv"><b>KPI:</b> ${esc(a.kpi)}</div>
+      </div>`).join("");
+    const e = p.experiment;
+    return `<details class="plan" ${idx === 0 ? "open" : ""}>
+      <summary><span class="rank">${p.priority_rank}</span><span class="sumtext"><b>${esc(p.segment_id)} · ${esc(p.segment_name)}</b><span class="sub">${int(s.subscribers || 0)} subscribers · ${pct(s.predicted_churn_rate)} predicted churn · ${money(s.expected_monthly_revenue_at_risk || 0)}/mo at risk</span></span><span class="saved"><b>${money(saved)}</b>est. saved / mo</span></summary>
+      <div class="plan-body">
+        <div><h4>Why this priority</h4><p>${esc(p.priority_rationale)}</p></div>
+        <div><h4>Root-cause hypothesis</h4><p>${esc(p.root_cause_hypothesis)}</p></div>
+        <div><h4>Evidence</h4><ul>${p.evidence.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div><h4>Actions</h4><div class="actions">${actions}</div></div>
+        <div><h4>A/B test</h4><ul><li><b>Hypothesis:</b> ${esc(e.hypothesis)}</li><li><b>Design:</b> ${esc(e.design)}</li><li><b>Success metric:</b> ${esc(e.success_metric)}</li></ul></div>
+      </div>
+    </details>`;
+  }).join("");
+  const lists = `<div class="lists">
+    <div class="panel"><h3>What not to do</h3><ul>${R.what_not_to_do.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div class="panel"><h3>Risks and caveats</h3><ul>${R.risks_and_caveats.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+      ${R.validation_warnings.length ? `<h3>Validation warnings</h3><ul>${R.validation_warnings.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</div>
+  </div>`;
+  box.innerHTML = summary + cards + lists;
+}
+
+/* ---------- boot ---------- */
+function renderCharts() { renderAttrChart(); renderHeat(); renderCurves(); renderOdds(); renderCalibration(); }
+if (!D) {
+  document.querySelector(".wrap").insertAdjacentHTML("beforeend", '<div class="empty">No data. Build this page with <span class="mono">python build_dashboard.py</span>.</div>');
+} else {
+  renderHeader(); renderAttrChips(); renderHeatSelect(); renderFindings(); renderMetrics(); renderFlags(); renderSegments(); renderPlan(); renderCharts();
+  let lastW = 0, timer;
+  new ResizeObserver(() => {
+    const w = document.querySelector(".wrap").clientWidth;
+    if (Math.abs(w - lastW) < 4) return;
+    lastW = w; clearTimeout(timer); timer = setTimeout(renderCharts, 80);
+  }).observe(document.querySelector(".wrap"));
+}
+</script>
+</body>
+</html>
