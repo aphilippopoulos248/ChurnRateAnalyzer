@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05T18:57:28+00:00",
+  "generated_at": "2026-10-05T18:58:10+00:00",
   "purpose": "Churn-risk segments for SonicWave subscribers. Use these to decide which groups to target and what retention actions to take.",
   "dataset": {
     "subscribers": 8500,
