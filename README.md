@@ -4,7 +4,7 @@ Give it any customer CSV with a churn column, and it explains who is leaving and
 
 ## Web app
 
-Link: https://churnrateanalyzer.vercel.app/
+Link: https://churnrateanalyzer.onrender.com/
 
 1. **Upload** a CSV and say what the business is.
 2. **Check the columns.** The app shows what it detected: the churn column, the revenue column, and whether each column is categorical, numeric or excluded. Change anything that's wrong.
