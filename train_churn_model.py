@@ -57,6 +57,11 @@ RISK_UP, RISK_DOWN = "#e34948", "#2a78d6"
 # purity — so every segment is large enough and different enough to act on.
 SEGMENT_TREE = dict(max_depth=3, min_samples_leaf=100,
                     min_impurity_decrease=2e-4, random_state=SEED)
+# Correction terms only exist to stop other flags double-counting. Their own
+# odds ratio (e.g. x0.03) is meaningless alone, so they're kept out of the
+# driver list and chart to avoid suggesting "having both risks lowers churn".
+CORRECTION_TERMS = {"billing_and_promo"}
+
 SHORT_LABEL = {
     "billing_repeat": "Repeat billing complaints",
     "promo_premium_low_usage": "Partner-promo Premium, low usage",
@@ -134,6 +139,8 @@ def odds_ratios(pipe):
     coefs = pipe.named_steps["model"].coef_[0]
     rows = []
     for raw, b in zip(names, coefs):
+        if raw.split("__", 1)[1] in CORRECTION_TERMS:
+            continue
         term, note = readable_term(raw)
         rows.append({"feature": term, "comparison": note,
                      "odds_ratio": round(float(np.exp(b)), 3),
@@ -407,6 +414,9 @@ def main():
             "Premium's higher raw churn rate (13% vs 7-8%) is almost entirely explained by Premium "
             "subscribers being over-represented in the partner-promo low-usage group; outside it, "
             "Premium churns like every other plan.",
+            "Subscribers with both billing_repeat and promo_premium_low_usage (28 people) churn at "
+            "~54%, not higher: the two risks overlap rather than stack. The model includes a "
+            "billing_and_promo correction term for this, which is left out of churn_drivers.",
             "Subscribers outside the high-risk segments churn at about 3%, and the model finds no "
             "further pattern there; treat that as baseline churn.",
         ],

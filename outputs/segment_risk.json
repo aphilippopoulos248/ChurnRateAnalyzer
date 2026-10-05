@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05T18:56:52+00:00",
+  "generated_at": "2026-10-05T18:57:28+00:00",
   "purpose": "Churn-risk segments for SonicWave subscribers. Use these to decide which groups to target and what retention actions to take.",
   "dataset": {
     "subscribers": 8500,
@@ -147,12 +147,6 @@
       "direction": "raises churn"
     },
     {
-      "feature": "billing_and_promo",
-      "comparison": "if present vs absent",
-      "odds_ratio": 0.032,
-      "direction": "lowers churn"
-    },
-    {
       "feature": "last_ticket_topic = Account",
       "comparison": "vs No ticket",
       "odds_ratio": 1.322,
@@ -180,6 +174,7 @@
   "caveats": [
     "Drivers are associations from historical data, not proven causes; test interventions before rolling out.",
     "Premium's higher raw churn rate (13% vs 7-8%) is almost entirely explained by Premium subscribers being over-represented in the partner-promo low-usage group; outside it, Premium churns like every other plan.",
+    "Subscribers with both billing_repeat and promo_premium_low_usage (28 people) churn at ~54%, not higher: the two risks overlap rather than stack. The model includes a billing_and_promo correction term for this, which is left out of churn_drivers.",
     "Subscribers outside the high-risk segments churn at about 3%, and the model finds no further pattern there; treat that as baseline churn."
   ]
 }
