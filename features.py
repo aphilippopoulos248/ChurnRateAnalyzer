@@ -24,10 +24,14 @@ CATEGORICAL = [
 NUMERIC = ["tenure_months", "avg_weekly_hours", "support_tickets_90d"]
 
 # Interaction flags found in Phase 1 + 2 EDA. A linear model can't discover
-# "A AND B" on its own, so we hand it these two explicitly.
+# "A AND B" on its own, so we hand it these explicitly.
+# billing_and_promo corrects for the two risks overlapping rather than
+# stacking: without it, subscribers with both flags are predicted ~98% churn
+# when they actually churn at ~54%.
 ENGINEERED = {
     "billing_repeat": "2+ support tickets in 90 days and the last one was about Billing",
     "promo_premium_low_usage": "Signed up via Partner promo, on Premium, Low-usage content mix",
+    "billing_and_promo": "Has both billing_repeat and promo_premium_low_usage",
 }
 
 # monthly_spend is excluded: it is a deterministic function of plan_type.
@@ -46,6 +50,7 @@ def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
         & (df["content_mix"] == "Low-usage")
         & (df["plan_type"] == "Premium")
     ).astype(int)
+    df["billing_and_promo"] = df["billing_repeat"] * df["promo_premium_low_usage"]
     return df
 
 

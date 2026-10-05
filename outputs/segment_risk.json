@@ -1,26 +1,27 @@
 {
-  "generated_at": "2026-10-05T18:48:02+00:00",
+  "generated_at": "2026-10-05T18:56:52+00:00",
   "purpose": "Churn-risk segments for SonicWave subscribers. Use these to decide which groups to target and what retention actions to take.",
   "dataset": {
     "subscribers": 8500,
     "overall_churn_rate": 0.0971,
     "total_monthly_revenue": 89046.13,
-    "expected_monthly_revenue_at_risk": 9156.96
+    "expected_monthly_revenue_at_risk": 9159.82
   },
   "model": {
     "type": "Logistic regression + interaction flags",
     "validation": "5-fold stratified cross-validation; segment figures use out-of-fold predictions",
     "metrics": {
-      "roc_auc": 0.8345,
-      "pr_auc": 0.4689,
-      "brier": 0.0566,
-      "top_decile_churn_rate": 0.5929,
-      "top_decile_lift": 6.11,
-      "top_decile_share_of_churners_captured": 0.6109
+      "roc_auc": 0.8337,
+      "pr_auc": 0.4648,
+      "brier": 0.0561,
+      "top_decile_churn_rate": 0.5941,
+      "top_decile_lift": 6.12,
+      "top_decile_share_of_churners_captured": 0.6121
     },
     "engineered_features": {
       "billing_repeat": "2+ support tickets in 90 days and the last one was about Billing",
-      "promo_premium_low_usage": "Signed up via Partner promo, on Premium, Low-usage content mix"
+      "promo_premium_low_usage": "Signed up via Partner promo, on Premium, Low-usage content mix",
+      "billing_and_promo": "Has both billing_repeat and promo_premium_low_usage"
     }
   },
   "segments": [
@@ -34,13 +35,13 @@
       "risk_tier": "High",
       "subscribers": 322,
       "share_of_base": 0.0379,
-      "predicted_churn_rate": 0.5856,
+      "predicted_churn_rate": 0.6079,
       "actual_churn_rate": 0.6366,
-      "lift_vs_overall": 6.03,
-      "expected_churners": 188.6,
+      "lift_vs_overall": 6.26,
+      "expected_churners": 195.7,
       "monthly_revenue": 4182.78,
-      "expected_monthly_revenue_at_risk": 2449.27,
-      "share_of_total_revenue_at_risk": 0.2675,
+      "expected_monthly_revenue_at_risk": 2542.6,
+      "share_of_total_revenue_at_risk": 0.2776,
       "plan_mix": {
         "Premium": 1.0
       },
@@ -79,13 +80,13 @@
       "risk_tier": "High",
       "subscribers": 682,
       "share_of_base": 0.0802,
-      "predicted_churn_rate": 0.561,
+      "predicted_churn_rate": 0.5621,
       "actual_churn_rate": 0.5645,
-      "lift_vs_overall": 5.78,
-      "expected_churners": 382.6,
+      "lift_vs_overall": 5.79,
+      "expected_churners": 383.3,
       "monthly_revenue": 7242.07,
-      "expected_monthly_revenue_at_risk": 4081.31,
-      "share_of_total_revenue_at_risk": 0.4457,
+      "expected_monthly_revenue_at_risk": 4071.39,
+      "share_of_total_revenue_at_risk": 0.4445,
       "plan_mix": {
         "Premium": 0.399,
         "Basic": 0.318,
@@ -114,13 +115,13 @@
       "risk_tier": "Low",
       "subscribers": 7496,
       "share_of_base": 0.8819,
-      "predicted_churn_rate": 0.0341,
+      "predicted_churn_rate": 0.0331,
       "actual_churn_rate": 0.0314,
-      "lift_vs_overall": 0.35,
-      "expected_churners": 255.8,
+      "lift_vs_overall": 0.34,
+      "expected_churners": 248.1,
       "monthly_revenue": 77621.28,
-      "expected_monthly_revenue_at_risk": 2626.37,
-      "share_of_total_revenue_at_risk": 0.2868,
+      "expected_monthly_revenue_at_risk": 2545.84,
+      "share_of_total_revenue_at_risk": 0.2779,
       "plan_mix": {
         "Premium": 0.374,
         "Basic": 0.322,
@@ -136,19 +137,43 @@
     {
       "feature": "promo_premium_low_usage",
       "comparison": "if present vs absent",
-      "odds_ratio": 42.567,
+      "odds_ratio": 47.323,
       "direction": "raises churn"
     },
     {
       "feature": "billing_repeat",
       "comparison": "if present vs absent",
-      "odds_ratio": 30.461,
+      "odds_ratio": 33.47,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "billing_and_promo",
+      "comparison": "if present vs absent",
+      "odds_ratio": 0.032,
+      "direction": "lowers churn"
+    },
+    {
+      "feature": "last_ticket_topic = Account",
+      "comparison": "vs No ticket",
+      "odds_ratio": 1.322,
       "direction": "raises churn"
     },
     {
       "feature": "plan_type = Free",
       "comparison": "vs Basic",
-      "odds_ratio": 1.266,
+      "odds_ratio": 1.289,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "last_ticket_topic = Content",
+      "comparison": "vs No ticket",
+      "odds_ratio": 1.278,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "last_ticket_topic = Billing",
+      "comparison": "vs No ticket",
+      "odds_ratio": 1.263,
       "direction": "raises churn"
     }
   ],

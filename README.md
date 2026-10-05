@@ -55,13 +55,14 @@ All charts: [`figures/`](figures/). Heatmap cells with fewer than 30 subscribers
 | Model | ROC-AUC | PR-AUC | Brier |
 |---|---|---|---|
 | Logistic regression (raw features) | 0.823 | 0.418 | 0.0685 |
-| **Logistic regression + interaction flags** (chosen) | **0.835** | **0.469** | **0.0566** |
+| **Logistic regression + interaction flags** (chosen) | **0.834** | **0.465** | **0.0561** |
 | Gradient boosting (raw features) | 0.837 | 0.464 | 0.0586 |
 
-Phase 1 showed churn concentrates where two conditions meet, which a linear model can't learn on its own. Two engineered flags (`features.py`) fix that:
+Phase 1 showed churn concentrates where two conditions meet, which a linear model can't learn on its own. Engineered flags (`features.py`) fix that:
 
 - `billing_repeat`: 2+ support tickets in 90 days and the last one was about Billing
 - `promo_premium_low_usage`: signed up via Partner promo, on Premium, Low-usage content mix
+- `billing_and_promo`: has both of the above. Without it the model adds the two risks together and predicts ~98% churn for the 28 subscribers who have both, when they actually churn at ~54%. With it, their prediction drops to ~66–71%.
 
 With them, plain logistic regression matches gradient boosting while staying fully explainable through odds ratios. The top 10% of subscribers by predicted risk churn at ~60% (6.2× lift) and contain ~62% of all churners.
 
@@ -75,9 +76,9 @@ A shallow surrogate decision tree fitted to the out-of-fold churn probabilities 
 
 | Segment | Subscribers | Predicted churn | Revenue at risk / mo |
 |---|---|---|---|
-| S1 Partner-promo Premium, low usage | 322 | 59% | $2,449 |
-| S2 Repeat billing complaints | 682 | 56% | $4,081 |
-| S3 Everyone else (baseline) | 7,496 | 3% | $2,626 |
+| S1 Partner-promo Premium, low usage | 322 | 61% | $2,543 |
+| S2 Repeat billing complaints | 682 | 56% | $4,071 |
+| S3 Everyone else (baseline) | 7,496 | 3% | $2,546 |
 
 ![Risk segments](figures/11_risk_segments.png)
 
