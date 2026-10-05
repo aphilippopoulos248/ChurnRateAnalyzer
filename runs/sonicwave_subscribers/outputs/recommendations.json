@@ -1,0 +1,161 @@
+{
+  "model": "gemini-3.8-flash",
+  "validation_warnings": [],
+  "executive_summary": "Our subscriber base of 8,500 accounts generates $89,046.13 in monthly recurring revenue, with an overall churn rate of 9.71% putting $9,162.75 in monthly revenue at risk. Churn is heavily concentrated in two specific interaction cohorts: repeat billing issue contacts (S2) and partner promo subscribers on premium plans with low usage (S1), which together represent 72.23% of all revenue at risk despite comprising only 11.81% of subscribers. By contrast, the remaining 7,496 baseline subscribers (S3) churn at a healthy 3.14% rate. We recommend focusing intervention resources primarily on resolving recurring billing friction (S2) and addressing partner acquisition onboarding and value realization (S1). Prioritizing targeted operational fixes and validating each via controlled A/B experiments can conservatively protect approximately $1,323.74 in recurring monthly revenue.",
+  "segment_plans": [
+    {
+      "segment_id": "S2",
+      "segment_name": "Billing + support tickets 90d >= 2",
+      "priority_rank": 1,
+      "priority_rationale": "S2 represents the largest financial exposure, accounting for $4,073.91 (44.46%) of total monthly revenue at risk and 383.5 expected churners across 682 subscribers. While S1 has a slightly higher predicted churn rate (60.84% vs 56.23%), S2 has 60% more at-risk revenue and addresses direct operational support friction, making it our most actionable opportunity.",
+      "root_cause_hypothesis": "Subscribers experiencing multiple billing tickets within 90 days likely encounter unresolved payment errors, double charges, or persistent invoice confusion that cause acute dissatisfaction and drive voluntary cancellation.",
+      "evidence": [
+        "Segment S2 has 682 subscribers with an actual churn rate of 56.45% (predicted 56.23%) and lift vs overall of 5.79.",
+        "Expected monthly revenue at risk is $4,073.91, representing 44.46% of all revenue at risk across the business.",
+        "Model odds ratio for 'Billing + support tickets 90d >= 2' is 33.833 relative to absent.",
+        "Chart 02 shows that billing contacts with 1 ticket have a 5% churn rate (n=847), but churn spikes sharply to 57% at 2 tickets (n=547) and 53% at 3+ tickets (n=135)."
+      ],
+      "actions": [
+        {
+          "title": "Establish Priority Billing Escalation and First-Contact Resolution Protocol",
+          "description": "Route any customer contacting support regarding billing who already has 1 or more prior tickets directly to a specialized senior billing tier. Empower agents with immediate discretionary refund and dispute settlement authority to resolve the issue on the second touchpoint before churn intent crystallizes.",
+          "owner": "Customer Support Operations",
+          "effort": "Medium",
+          "timeline": "3 weeks",
+          "assumed_churn_reduction": 0.15,
+          "estimated_churners_saved": 57.525,
+          "estimated_monthly_revenue_saved": 611.0865,
+          "kpi": "Billing repeat contact rate and 30-day post-ticket churn rate"
+        },
+        {
+          "title": "Implement Proactive Outreach and Billing Health Audit",
+          "description": "Trigger an automated ticket review and personal outbound check-in via email or SMS within 24 hours whenever a customer logs their second billing-related inquiry in a 90-day window. The communication confirms ticket resolution, verifies the correct payment state, and offers a direct channel back to a dedicated specialist.",
+          "owner": "Retention & Lifecycle Marketing",
+          "effort": "Low",
+          "timeline": "2 weeks",
+          "assumed_churn_reduction": 0.1,
+          "estimated_churners_saved": 38.35,
+          "estimated_monthly_revenue_saved": 407.391,
+          "kpi": "Second billing ticket CSAT and subsequent 60-day cancellation rate"
+        }
+      ],
+      "experiment": {
+        "hypothesis": "Providing immediate escalation and specialized settlement on second billing inquiries will lower the segment churn rate from ~56% to below 48%.",
+        "design": "Randomize 682 eligible users entering the S2 criteria (billing inquiry with >=2 tickets in 90 days) into a 50/50 A/B split: Group A receives standard queue routing, while Group B receives priority routing to senior billing specialists with instant settlement authority. Run test over 60 days.",
+        "success_metric": "60-day subscriber retention rate post-ticket resolution"
+      }
+    },
+    {
+      "segment_id": "S1",
+      "segment_name": "Premium + Low-usage + Partner promo",
+      "priority_rank": 2,
+      "priority_rationale": "S1 holds the highest concentration of churn risk with a 60.84% predicted churn rate (63.66% actual) and an odds ratio of 47.983. With 322 subscribers, it exposes $2,544.78 in monthly revenue (27.77% of total revenue at risk) and 195.9 expected churners.",
+      "root_cause_hypothesis": "Partner promo subscribers acquired into Premium tier plans without establishing habitual content consumption reach median tenure (11 months) where trial discounts or promo periods expire, prompting immediate cancellation due to low perceived value relative to the Premium price point.",
+      "evidence": [
+        "Segment S1 includes 322 subscribers with an actual churn rate of 63.66% and predicted churn rate of 60.84% (lift vs overall of 6.27).",
+        "Expected monthly revenue at risk is $2,544.78, comprising 27.77% of total revenue at risk.",
+        "Model odds ratio for 'Premium + Low-usage + Partner promo' is 47.983.",
+        "Chart 04 shows Low-usage subscribers acquired via Partner promo have a 52% churn rate (n=435), whereas Low-usage subscribers from Android, Web, and iOS churn at only 7-8%.",
+        "Chart 03 shows Premium subscribers with Low-usage churn at 37% (n=666), compared to 7-8% for other content mixes on Premium."
+      ],
+      "actions": [
+        {
+          "title": "Deploy Low-Usage Partner Promo Onboarding & Re-Engagement Flow",
+          "description": "Launch an automated lifecycle sequence tailored to Partner promo subscribers exhibiting low usage during their initial 60 days. Deliver curated content recommendations, feature highlight walkthroughs, and personalized playlist/show setups to increase engagement before the renewal decision.",
+          "owner": "Lifecycle Marketing & Engagement",
+          "effort": "Medium",
+          "timeline": "4 weeks",
+          "assumed_churn_reduction": 0.12,
+          "estimated_churners_saved": 23.508,
+          "estimated_monthly_revenue_saved": 305.3736,
+          "kpi": "Weekly active hours and 90-day retention rate for partner promo signups"
+        },
+        {
+          "title": "Offer Pre-Renewal Plan Downshift and Value Protection",
+          "description": "Introduce an automated retention offer at month 10 for low-usage partner promo subscribers on Premium, providing an easy option to downshift to the Basic tier or secure a bridge discount rather than canceling outright. Emphasize saved favorites and library preservation.",
+          "owner": "Product Growth & Subscriptions",
+          "effort": "Medium",
+          "timeline": "1 quarter",
+          "assumed_churn_reduction": 0.08,
+          "estimated_churners_saved": 15.672,
+          "estimated_monthly_revenue_saved": 203.5824,
+          "kpi": "Plan downgrade uptake rate vs direct cancellation rate"
+        }
+      ],
+      "experiment": {
+        "hypothesis": "Proactive content discovery interventions combined with a flexible plan downshift option for low-usage partner signups will reduce S1 churn by at least 10%.",
+        "design": "Split 322 newly qualifying S1 subscribers evenly (50/50) at month 9 of tenure: Control group receives standard renewal notices, while Treatment group receives tailored re-engagement prompts and an option to switch to Basic tier at renewal. Monitor across a 90-day observation window.",
+        "success_metric": "Account renewal rate at end of promo/annual period"
+      }
+    },
+    {
+      "segment_id": "S3",
+      "segment_name": "Everyone else (baseline)",
+      "priority_rank": 3,
+      "priority_rationale": "S3 accounts for 7,496 subscribers (88.19% of the base) and $77,621.28 in monthly revenue. However, its churn rate is only 3.14% (lift of 0.34), representing natural background churn. Heavy intervention here would yield minimal marginal return and risk disrupting healthy user dynamics.",
+      "root_cause_hypothesis": "Churn in this cohort reflects unavoidable natural baseline attrition (life transitions, voluntary budget adjustments, or incidental churn) rather than systemic product or pricing failures.",
+      "evidence": [
+        "Segment S3 has 7,496 subscribers with an actual churn rate of 3.14% and predicted churn rate of 3.31%.",
+        "Tenure median is 12.0 months, support tickets median is 0.0, and average weekly hours median is 8.0, identical to overall population benchmarks.",
+        "Expected monthly revenue at risk is $2,544.05 out of $77,621.28 total segment revenue (a low 3.28% risk share of segment revenue)."
+      ],
+      "actions": [
+        {
+          "title": "Maintain Baseline Payment Card Lifecycle and Self-Service Care",
+          "description": "Ensure passive involuntary churn is minimized through automated credit card pre-expiration notifications and account updater integration. Maintain current product stability and standard self-service support channels without intrusive marketing interventions.",
+          "owner": "Payments & Platform Infrastructure",
+          "effort": "Low",
+          "timeline": "Ongoing",
+          "assumed_churn_reduction": 0.05,
+          "estimated_churners_saved": 12.39,
+          "estimated_monthly_revenue_saved": 127.2025,
+          "kpi": "Failed payment recovery rate and involuntary churn rate"
+        }
+      ],
+      "experiment": {
+        "hypothesis": "Refining payment update reminder timing 7 days before card expiry will safely mitigate involuntary baseline churn without irritating healthy subscribers.",
+        "design": "A/B test payment renewal notices across 2,000 renewing S3 subscribers: 1,000 receive standard reminder timing, 1,000 receive an optimized smart-retry notification. Run for 30 days.",
+        "success_metric": "Successful renewal transaction rate without service interruption"
+      }
+    }
+  ],
+  "chart_observations": [
+    {
+      "chart": "01_churn_by_attribute.png",
+      "observation": "While the unsegmented view shows high churn in support tickets >=2 (39%), last ticket topic = Billing (28%), content mix = Low-usage (23%), and signup channel = Partner promo (22%), the caveats show that outside segments S1 and S2, these attributes exhibit standard baseline churn (~2.9% - 3.4%). Notably, avg_weekly_hours shows little variation across buckets (9% - 12%), confirming raw usage volume alone is not a primary churn driver."
+    },
+    {
+      "chart": "02_heatmap_last_ticket_topic__support_tickets_90d.png",
+      "observation": "The heatmap clearly isolates the non-linear jump in churn: Billing contacts with 1 ticket churn at only 5% (n=847), but jump tenfold to 57% at 2 tickets (n=547) and 53% at 3+ tickets (n=135). In contrast, all other support topics (Playback, Account, Content) remain between 5% and 10% churn even when ticket counts reach 2."
+    },
+    {
+      "chart": "03_heatmap_plan_type__content_mix.png",
+      "observation": "Low-usage only creates churn vulnerability when paired with Premium plans (37% churn, n=666). On Basic, Family, and Free plans, Low-usage subscribers churn at only 7%, indicating that perceived mismatch between cost and consumption is specific to the Premium tier."
+    },
+    {
+      "chart": "04_heatmap_content_mix__signup_channel.png",
+      "observation": "Partner promo acquisition exhibits catastrophic churn specifically when content mix is Low-usage (52% churn, n=435). Partner promo users who are Music-heavy, Balanced, or Podcast-heavy churn at normal rates of 7%, and Low-usage subscribers from Android, Web, or iOS churn at 7-8%."
+    },
+    {
+      "chart": "11_churn_drivers.png",
+      "observation": "Interaction features dominate churn probability over linear factors: 'Premium + Low-usage + Partner promo' has an odds ratio of 47.98x, and 'Billing + support tickets 90d >= 2' has 33.83x. Standard single features such as individual ticket topics (Account 1.32x, Content 1.29x, Billing 1.27x) have modest impact by comparison."
+    },
+    {
+      "chart": "13_risk_segments.png",
+      "observation": "The dual-panel visual confirms the divergence between churn percentage and revenue magnitude: S1 exhibits the highest churn rate (61%), but S2 represents the single largest pool of exposed revenue ($4,074, 44% of total risk), visually confirming why S2 is Priority Rank 1."
+    }
+  ],
+  "what_not_to_do": [
+    "Do not target all subscribers on Premium plans with retention discounts or campaigns. Outside segments S1 and S2, Premium customers churn at only 3.1%, matching the baseline; broad campaigns would needlessly erode subscription margins.",
+    "Do not trigger blanket churn interventions for all customers who submit a single billing support ticket. The data shows billing tickets with count = 1 have an unremarkable 5% churn rate; only those with 2 or more tickets in 90 days exhibit elevated risk.",
+    "Do not launch generic engagement campaigns to all Low-usage subscribers. Low-usage customers on Basic, Family, or Free tiers churn at 7%, and outside S1 and S2 they churn at 2.9%, making broad interventions wasteful.",
+    "Do not restrict or discount all Partner promo signups indiscriminately. Partner promo subscribers who have Balanced, Music-heavy, or Podcast-heavy usage retain at healthy 7% rates; interventions should strictly target low-usage partner signups.",
+    "Do not offer aggressive retention incentives or discount campaigns to segment S3. With an actual churn rate of 3.14%, S3 operates at baseline background attrition, and discounting would dilute $77,621.28 in recurring monthly revenue."
+  ],
+  "risks_and_caveats": [
+    "Drivers identified by the model are statistical associations from historical data, not verified causal mechanisms; all planned interventions must be validated via A/B testing before full deployment.",
+    "Interaction flag overlap: Some subscribers meet criteria for multiple risk flags. Because risk factors overlap rather than stack linearly, revenue savings across individual actions cannot be directly summed.",
+    "Feature dilution risk: Raw churn rates for individual dimensions (Premium at 13%, Low-usage at 23%, Billing at 28%, Partner promo at 22%) are entirely driven by the sub-segments defined in S1 and S2; treating these features independently will lead to mistargeted spend.",
+    "Operational bottleneck risk: Priority routing and rapid escalation for S2 billing tickets requires dedicated support agent capacity; under-resourcing this action will fail to reduce ticket friction."
+  ]
+}

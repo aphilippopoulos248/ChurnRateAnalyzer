@@ -1,0 +1,1000 @@
+{
+ "overall": 0.1449,
+ "rows": 3333,
+ "ranked_features": [
+  "CustServ Calls",
+  "Day Mins",
+  "Day Charge",
+  "Int'l Plan",
+  "State",
+  "VMail Plan",
+  "Eve Mins",
+  "Eve Charge",
+  "Intl Calls",
+  "Intl Mins",
+  "Intl Charge",
+  "VMail Message",
+  "Day Calls",
+  "Night Mins",
+  "Night Charge",
+  "Night Calls",
+  "Account Length",
+  "Eve Calls",
+  "Area Code"
+ ],
+ "attributes": {
+  "State": {
+   "label": "State",
+   "rows": [
+    {
+     "label": "Other",
+     "rate": 0.1286,
+     "n": 1477
+    },
+    {
+     "label": "WV",
+     "rate": 0.0943,
+     "n": 106
+    },
+    {
+     "label": "MN",
+     "rate": 0.1786,
+     "n": 84
+    },
+    {
+     "label": "NY",
+     "rate": 0.1807,
+     "n": 83
+    },
+    {
+     "label": "AL",
+     "rate": 0.1,
+     "n": 80
+    },
+    {
+     "label": "OH",
+     "rate": 0.1282,
+     "n": 78
+    },
+    {
+     "label": "WI",
+     "rate": 0.0897,
+     "n": 78
+    },
+    {
+     "label": "OR",
+     "rate": 0.141,
+     "n": 78
+    },
+    {
+     "label": "VA",
+     "rate": 0.0649,
+     "n": 77
+    },
+    {
+     "label": "WY",
+     "rate": 0.1169,
+     "n": 77
+    },
+    {
+     "label": "CT",
+     "rate": 0.1622,
+     "n": 74
+    },
+    {
+     "label": "ID",
+     "rate": 0.1233,
+     "n": 73
+    },
+    {
+     "label": "VT",
+     "rate": 0.1096,
+     "n": 73
+    },
+    {
+     "label": "MI",
+     "rate": 0.2192,
+     "n": 73
+    },
+    {
+     "label": "TX",
+     "rate": 0.25,
+     "n": 72
+    },
+    {
+     "label": "UT",
+     "rate": 0.1389,
+     "n": 72
+    },
+    {
+     "label": "IN",
+     "rate": 0.1268,
+     "n": 71
+    },
+    {
+     "label": "KS",
+     "rate": 0.1857,
+     "n": 70
+    },
+    {
+     "label": "MD",
+     "rate": 0.2429,
+     "n": 70
+    },
+    {
+     "label": "NJ",
+     "rate": 0.2647,
+     "n": 68
+    },
+    {
+     "label": "MT",
+     "rate": 0.2059,
+     "n": 68
+    },
+    {
+     "label": "NC",
+     "rate": 0.1618,
+     "n": 68
+    },
+    {
+     "label": "CO",
+     "rate": 0.1364,
+     "n": 66
+    },
+    {
+     "label": "WA",
+     "rate": 0.2121,
+     "n": 66
+    },
+    {
+     "label": "NV",
+     "rate": 0.2121,
+     "n": 66
+    },
+    {
+     "label": "MA",
+     "rate": 0.1692,
+     "n": 65
+    }
+   ],
+   "signal": 0.0143,
+   "kind": "categorical"
+  },
+  "Int'l Plan": {
+   "label": "Int'l plan",
+   "rows": [
+    {
+     "label": "no",
+     "rate": 0.115,
+     "n": 3010
+    },
+    {
+     "label": "yes",
+     "rate": 0.4241,
+     "n": 323
+    }
+   ],
+   "signal": 0.0675,
+   "kind": "categorical"
+  },
+  "VMail Plan": {
+   "label": "Vmail plan",
+   "rows": [
+    {
+     "label": "no",
+     "rate": 0.1672,
+     "n": 2411
+    },
+    {
+     "label": "yes",
+     "rate": 0.0868,
+     "n": 922
+    }
+   ],
+   "signal": 0.0104,
+   "kind": "categorical"
+  },
+  "Account Length": {
+   "label": "Account length",
+   "rows": [
+    {
+     "label": "1\u201367",
+     "rate": 0.1302,
+     "n": 676
+    },
+    {
+     "label": "67\u201391",
+     "rate": 0.136,
+     "n": 684
+    },
+    {
+     "label": "91\u2013111",
+     "rate": 0.1608,
+     "n": 653
+    },
+    {
+     "label": "111\u2013134",
+     "rate": 0.1571,
+     "n": 662
+    },
+    {
+     "label": "134\u2013243",
+     "rate": 0.1413,
+     "n": 658
+    }
+   ],
+   "signal": 0.0011,
+   "kind": "numeric"
+  },
+  "Area Code": {
+   "label": "Area code",
+   "rows": [
+    {
+     "label": "408",
+     "rate": 0.1456,
+     "n": 838
+    },
+    {
+     "label": "415",
+     "rate": 0.1426,
+     "n": 1655
+    },
+    {
+     "label": "510",
+     "rate": 0.1488,
+     "n": 840
+    }
+   ],
+   "signal": 0.0001,
+   "kind": "numeric"
+  },
+  "VMail Message": {
+   "label": "Vmail message",
+   "rows": [
+    {
+     "label": "0\u201325",
+     "rate": 0.1544,
+     "n": 2695
+    },
+    {
+     "label": "25\u201351",
+     "rate": 0.105,
+     "n": 638
+    }
+   ],
+   "signal": 0.003,
+   "kind": "numeric"
+  },
+  "Day Mins": {
+   "label": "Day mins",
+   "rows": [
+    {
+     "label": "0\u2013135",
+     "rate": 0.1319,
+     "n": 667
+    },
+    {
+     "label": "135\u2013166",
+     "rate": 0.1036,
+     "n": 666
+    },
+    {
+     "label": "166\u2013194",
+     "rate": 0.0778,
+     "n": 668
+    },
+    {
+     "label": "194\u2013225",
+     "rate": 0.0707,
+     "n": 665
+    },
+    {
+     "label": "225\u2013351",
+     "rate": 0.3403,
+     "n": 667
+    }
+   ],
+   "signal": 0.0808,
+   "kind": "numeric"
+  },
+  "Day Calls": {
+   "label": "Day calls",
+   "rows": [
+    {
+     "label": "0\u201384",
+     "rate": 0.1431,
+     "n": 699
+    },
+    {
+     "label": "84\u201396",
+     "rate": 0.1309,
+     "n": 695
+    },
+    {
+     "label": "96\u2013106",
+     "rate": 0.1405,
+     "n": 662
+    },
+    {
+     "label": "106\u2013117",
+     "rate": 0.1354,
+     "n": 628
+    },
+    {
+     "label": "117\u2013165",
+     "rate": 0.1757,
+     "n": 649
+    }
+   ],
+   "signal": 0.002,
+   "kind": "numeric"
+  },
+  "Day Charge": {
+   "label": "Day charge",
+   "rows": [
+    {
+     "label": "0\u201323",
+     "rate": 0.1319,
+     "n": 667
+    },
+    {
+     "label": "23\u201328",
+     "rate": 0.1036,
+     "n": 666
+    },
+    {
+     "label": "28\u201333",
+     "rate": 0.0778,
+     "n": 668
+    },
+    {
+     "label": "33\u201338",
+     "rate": 0.0707,
+     "n": 665
+    },
+    {
+     "label": "38\u201360",
+     "rate": 0.3403,
+     "n": 667
+    }
+   ],
+   "signal": 0.0808,
+   "kind": "numeric"
+  },
+  "Eve Mins": {
+   "label": "Eve mins",
+   "rows": [
+    {
+     "label": "0\u2013159",
+     "rate": 0.099,
+     "n": 667
+    },
+    {
+     "label": "159\u2013188",
+     "rate": 0.1424,
+     "n": 667
+    },
+    {
+     "label": "188\u2013213",
+     "rate": 0.1306,
+     "n": 666
+    },
+    {
+     "label": "213\u2013244",
+     "rate": 0.1454,
+     "n": 667
+    },
+    {
+     "label": "244\u2013364",
+     "rate": 0.2072,
+     "n": 666
+    }
+   ],
+   "signal": 0.01,
+   "kind": "numeric"
+  },
+  "Eve Calls": {
+   "label": "Eve calls",
+   "rows": [
+    {
+     "label": "0\u201384",
+     "rate": 0.14,
+     "n": 707
+    },
+    {
+     "label": "84\u201395",
+     "rate": 0.144,
+     "n": 653
+    },
+    {
+     "label": "95\u2013105",
+     "rate": 0.1405,
+     "n": 655
+    },
+    {
+     "label": "105\u2013117",
+     "rate": 0.1521,
+     "n": 697
+    },
+    {
+     "label": "117\u2013170",
+     "rate": 0.1481,
+     "n": 621
+    }
+   ],
+   "signal": 0.0002,
+   "kind": "numeric"
+  },
+  "Eve Charge": {
+   "label": "Eve charge",
+   "rows": [
+    {
+     "label": "0\u201314",
+     "rate": 0.099,
+     "n": 667
+    },
+    {
+     "label": "14\u201316",
+     "rate": 0.1424,
+     "n": 667
+    },
+    {
+     "label": "16\u201318",
+     "rate": 0.1306,
+     "n": 666
+    },
+    {
+     "label": "18\u201321",
+     "rate": 0.1454,
+     "n": 667
+    },
+    {
+     "label": "21\u201331",
+     "rate": 0.2072,
+     "n": 666
+    }
+   ],
+   "signal": 0.01,
+   "kind": "numeric"
+  },
+  "Night Mins": {
+   "label": "Night mins",
+   "rows": [
+    {
+     "label": "23\u2013159",
+     "rate": 0.1151,
+     "n": 669
+    },
+    {
+     "label": "159\u2013188",
+     "rate": 0.1527,
+     "n": 668
+    },
+    {
+     "label": "188\u2013214",
+     "rate": 0.1491,
+     "n": 664
+    },
+    {
+     "label": "214\u2013244",
+     "rate": 0.1502,
+     "n": 666
+    },
+    {
+     "label": "244\u2013395",
+     "rate": 0.1577,
+     "n": 666
+    }
+   ],
+   "signal": 0.0019,
+   "kind": "numeric"
+  },
+  "Night Calls": {
+   "label": "Night calls",
+   "rows": [
+    {
+     "label": "33\u201383",
+     "rate": 0.1557,
+     "n": 687
+    },
+    {
+     "label": "83\u201395",
+     "rate": 0.1348,
+     "n": 675
+    },
+    {
+     "label": "95\u2013105",
+     "rate": 0.133,
+     "n": 669
+    },
+    {
+     "label": "105\u2013117",
+     "rate": 0.1353,
+     "n": 665
+    },
+    {
+     "label": "117\u2013175",
+     "rate": 0.1664,
+     "n": 637
+    }
+   ],
+   "signal": 0.0015,
+   "kind": "numeric"
+  },
+  "Night Charge": {
+   "label": "Night charge",
+   "rows": [
+    {
+     "label": "1.0\u20137.1",
+     "rate": 0.1157,
+     "n": 674
+    },
+    {
+     "label": "7.1\u20138.5",
+     "rate": 0.151,
+     "n": 669
+    },
+    {
+     "label": "8.5\u20139.6",
+     "rate": 0.1498,
+     "n": 661
+    },
+    {
+     "label": "9.6\u201311",
+     "rate": 0.1514,
+     "n": 667
+    },
+    {
+     "label": "11\u201318",
+     "rate": 0.1571,
+     "n": 662
+    }
+   ],
+   "signal": 0.0018,
+   "kind": "numeric"
+  },
+  "Intl Mins": {
+   "label": "Intl mins",
+   "rows": [
+    {
+     "label": "0\u20138",
+     "rate": 0.1137,
+     "n": 695
+    },
+    {
+     "label": "8\u20139.7",
+     "rate": 0.1525,
+     "n": 682
+    },
+    {
+     "label": "9.7\u201311",
+     "rate": 0.136,
+     "n": 647
+    },
+    {
+     "label": "11\u201312",
+     "rate": 0.1267,
+     "n": 647
+    },
+    {
+     "label": "12\u201320",
+     "rate": 0.1964,
+     "n": 662
+    }
+   ],
+   "signal": 0.0066,
+   "kind": "numeric"
+  },
+  "Intl Calls": {
+   "label": "Intl calls",
+   "rows": [
+    {
+     "label": "0\u20132.4",
+     "rate": 0.2084,
+     "n": 667
+    },
+    {
+     "label": "2.4\u20133",
+     "rate": 0.1467,
+     "n": 668
+    },
+    {
+     "label": "3\u20135",
+     "rate": 0.121,
+     "n": 1091
+    },
+    {
+     "label": "5\u20136",
+     "rate": 0.128,
+     "n": 336
+    },
+    {
+     "label": "6\u201320",
+     "rate": 0.1243,
+     "n": 571
+    }
+   ],
+   "signal": 0.0088,
+   "kind": "numeric"
+  },
+  "Intl Charge": {
+   "label": "Intl charge",
+   "rows": [
+    {
+     "label": "0\u20132.2",
+     "rate": 0.1137,
+     "n": 695
+    },
+    {
+     "label": "2.2\u20132.6",
+     "rate": 0.1525,
+     "n": 682
+    },
+    {
+     "label": "2.6\u20133.0",
+     "rate": 0.136,
+     "n": 647
+    },
+    {
+     "label": "3.0\u20133.4",
+     "rate": 0.1267,
+     "n": 647
+    },
+    {
+     "label": "3.4\u20135.4",
+     "rate": 0.1964,
+     "n": 662
+    }
+   ],
+   "signal": 0.0066,
+   "kind": "numeric"
+  },
+  "CustServ Calls": {
+   "label": "Cust serv calls",
+   "rows": [
+    {
+     "label": "0",
+     "rate": 0.132,
+     "n": 697
+    },
+    {
+     "label": "1",
+     "rate": 0.1033,
+     "n": 1181
+    },
+    {
+     "label": "2",
+     "rate": 0.1146,
+     "n": 759
+    },
+    {
+     "label": "3",
+     "rate": 0.1026,
+     "n": 429
+    },
+    {
+     "label": "4",
+     "rate": 0.4578,
+     "n": 166
+    },
+    {
+     "label": "5+",
+     "rate": 0.6139,
+     "n": 101
+    }
+   ],
+   "signal": 0.1019,
+   "kind": "numeric"
+  }
+ },
+ "heatmaps": {
+  "VMail Plan__Day Mins": {
+   "title": "Vmail plan \u00d7 day mins: up to 44% churn",
+   "row_label": "Vmail plan",
+   "col_label": "Day mins",
+   "rows": [
+    "no",
+    "yes"
+   ],
+   "cols": [
+    "0\u2013135",
+    "135\u2013166",
+    "166\u2013194",
+    "194\u2013225",
+    "225\u2013351"
+   ],
+   "cells": [
+    [
+     {
+      "rate": 0.1476,
+      "n": 481
+     },
+     {
+      "rate": 0.1059,
+      "n": 491
+     },
+     {
+      "rate": 0.0748,
+      "n": 481
+     },
+     {
+      "rate": 0.0603,
+      "n": 464
+     },
+     {
+      "rate": 0.4372,
+      "n": 494
+     }
+    ],
+    [
+     {
+      "rate": 0.0914,
+      "n": 186
+     },
+     {
+      "rate": 0.0971,
+      "n": 175
+     },
+     {
+      "rate": 0.0856,
+      "n": 187
+     },
+     {
+      "rate": 0.0945,
+      "n": 201
+     },
+     {
+      "rate": 0.0636,
+      "n": 173
+     }
+    ]
+   ]
+  },
+  "VMail Plan__Day Charge": {
+   "title": "Vmail plan \u00d7 day charge: up to 44% churn",
+   "row_label": "Vmail plan",
+   "col_label": "Day charge",
+   "rows": [
+    "no",
+    "yes"
+   ],
+   "cols": [
+    "0\u201323",
+    "23\u201328",
+    "28\u201333",
+    "33\u201338",
+    "38\u201360"
+   ],
+   "cells": [
+    [
+     {
+      "rate": 0.1476,
+      "n": 481
+     },
+     {
+      "rate": 0.1059,
+      "n": 491
+     },
+     {
+      "rate": 0.0748,
+      "n": 481
+     },
+     {
+      "rate": 0.0603,
+      "n": 464
+     },
+     {
+      "rate": 0.4372,
+      "n": 494
+     }
+    ],
+    [
+     {
+      "rate": 0.0914,
+      "n": 186
+     },
+     {
+      "rate": 0.0971,
+      "n": 175
+     },
+     {
+      "rate": 0.0856,
+      "n": 187
+     },
+     {
+      "rate": 0.0945,
+      "n": 201
+     },
+     {
+      "rate": 0.0636,
+      "n": 173
+     }
+    ]
+   ]
+  },
+  "VMail Message__Day Mins": {
+   "title": "Vmail message \u00d7 day mins: up to 40% churn",
+   "row_label": "Vmail message",
+   "col_label": "Day mins",
+   "rows": [
+    "0\u201325",
+    "25\u201351"
+   ],
+   "cols": [
+    "0\u2013135",
+    "135\u2013166",
+    "166\u2013194",
+    "194\u2013225",
+    "225\u2013351"
+   ],
+   "cells": [
+    [
+     {
+      "rate": 0.1399,
+      "n": 536
+     },
+     {
+      "rate": 0.1049,
+      "n": 553
+     },
+     {
+      "rate": 0.0686,
+      "n": 539
+     },
+     {
+      "rate": 0.0553,
+      "n": 524
+     },
+     {
+      "rate": 0.3996,
+      "n": 543
+     }
+    ],
+    [
+     {
+      "rate": 0.0992,
+      "n": 131
+     },
+     {
+      "rate": 0.0973,
+      "n": 113
+     },
+     {
+      "rate": 0.1163,
+      "n": 129
+     },
+     {
+      "rate": 0.1277,
+      "n": 141
+     },
+     {
+      "rate": 0.0806,
+      "n": 124
+     }
+    ]
+   ]
+  }
+ },
+ "flags": [
+  {
+   "name": "flag_no_Day_Mins_ge_224_76_Eve_Mins_ge_158_94",
+   "label": "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159",
+   "description": "VMail Plan = no AND Day Mins >= 225 AND Eve Mins >= 159",
+   "conditions": [
+    {
+     "col": "VMail Plan",
+     "op": "==",
+     "value": "no"
+    },
+    {
+     "col": "Day Mins",
+     "op": ">=",
+     "value": 224.76000000000005
+    },
+    {
+     "col": "Eve Mins",
+     "op": ">=",
+     "value": 158.94000000000003
+    }
+   ],
+   "n": 399,
+   "churn_rate": 0.5063,
+   "churn_rate_without_combination": 0.0975
+  },
+  {
+   "name": "flag_Day_Mins_ge_194_Eve_Mins_ge_213_44_Day_Charge_ge_35_488",
+   "label": "Day Mins >= 194 + Eve Mins >= 213 + Day Charge >= 35.5",
+   "description": "Day Mins >= 194 AND Eve Mins >= 213 AND Day Charge >= 35.5",
+   "conditions": [
+    {
+     "col": "Day Mins",
+     "op": ">=",
+     "value": 194.0
+    },
+    {
+     "col": "Eve Mins",
+     "op": ">=",
+     "value": 213.43999999999997
+    },
+    {
+     "col": "Day Charge",
+     "op": ">=",
+     "value": 35.48799999999999
+    }
+   ],
+   "n": 416,
+   "churn_rate": 0.3942,
+   "churn_rate_without_combination": 0.1346
+  },
+  {
+   "name": "flag_Day_Mins_lt_179_4_CustServ_Calls_ge_4",
+   "label": "Day Mins < 179 + CustServ Calls >= 4",
+   "description": "Day Mins < 179 AND CustServ Calls >= 4",
+   "conditions": [
+    {
+     "col": "Day Mins",
+     "op": "<",
+     "value": 179.4
+    },
+    {
+     "col": "CustServ Calls",
+     "op": ">=",
+     "value": 4.0
+    }
+   ],
+   "n": 146,
+   "churn_rate": 0.7466,
+   "churn_rate_without_combination": 0.2397
+  },
+  {
+   "name": "flag_yes_Intl_Calls_lt_4",
+   "label": "Int'l Plan = yes + Intl Calls < 4",
+   "description": "Int'l Plan = yes AND Intl Calls < 4",
+   "conditions": [
+    {
+     "col": "Int'l Plan",
+     "op": "==",
+     "value": "yes"
+    },
+    {
+     "col": "Intl Calls",
+     "op": "<",
+     "value": 4.0
+    }
+   ],
+   "n": 133,
+   "churn_rate": 0.6165,
+   "churn_rate_without_combination": 0.2895
+  }
+ ],
+ "corrections": [
+  {
+   "name": "overlap_1_2",
+   "of": [
+    "flag_no_Day_Mins_ge_224_76_Eve_Mins_ge_158_94",
+    "flag_Day_Mins_ge_194_Eve_Mins_ge_213_44_Day_Charge_ge_35_488"
+   ],
+   "n": 203,
+   "description": "Has both: VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159 and Day Mins >= 194 + Eve Mins >= 213 + Day Charge >= 35.5"
+  },
+  {
+   "name": "overlap_1_4",
+   "of": [
+    "flag_no_Day_Mins_ge_224_76_Eve_Mins_ge_158_94",
+    "flag_yes_Intl_Calls_lt_4"
+   ],
+   "n": 25,
+   "description": "Has both: VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159 and Int'l Plan = yes + Intl Calls < 4"
+  },
+  {
+   "name": "overlap_2_4",
+   "of": [
+    "flag_Day_Mins_ge_194_Eve_Mins_ge_213_44_Day_Charge_ge_35_488",
+    "flag_yes_Intl_Calls_lt_4"
+   ],
+   "n": 27,
+   "description": "Has both: Day Mins >= 194 + Eve Mins >= 213 + Day Charge >= 35.5 and Int'l Plan = yes + Intl Calls < 4"
+  }
+ ],
+ "revenue": null
+}

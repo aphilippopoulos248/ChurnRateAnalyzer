@@ -1,0 +1,201 @@
+{
+  "purpose": "Churn-risk segments for customers of a subscription business. Use these to decide which groups to target and what retention actions to take.",
+  "dataset": {
+    "name": "sonicwave_subscribers",
+    "rows": 8500,
+    "entity": "customers",
+    "business_context": "a subscription business",
+    "overall_churn_rate": 0.0971,
+    "total_monthly_revenue": 89046.13,
+    "expected_monthly_revenue_at_risk": 9162.75,
+    "currency": "$"
+  },
+  "model": {
+    "type": "Logistic regression + interaction flags",
+    "why": "Logistic regression + interaction flags is within 0.01 ROC-AUC of gradient boosting, so the explainable model is preferred.",
+    "validation": "5-fold stratified cross-validation; segment figures use out-of-fold predictions",
+    "metrics": {
+      "roc_auc": 0.8338,
+      "pr_auc": 0.4645,
+      "brier": 0.0561,
+      "top_decile_churn_rate": 0.5929,
+      "top_decile_lift": 6.11,
+      "top_decile_share_of_churners_captured": 0.6109
+    },
+    "engineered_features": {
+      "flag_billing_support_tickets_90d_ge_2": "last_ticket_topic = Billing AND support_tickets_90d >= 2",
+      "flag_premium_low_usage_partner_promo": "plan_type = Premium AND content_mix = Low-usage AND signup_channel = Partner promo"
+    }
+  },
+  "segments": [
+    {
+      "segment_id": "S1",
+      "name": "Premium + Low-usage + Partner promo",
+      "rule": [
+        "NOT (Billing + support tickets 90d >= 2)",
+        "Premium + Low-usage + Partner promo"
+      ],
+      "risk_tier": "High",
+      "subscribers": 322,
+      "share_of_base": 0.0379,
+      "predicted_churn_rate": 0.6084,
+      "actual_churn_rate": 0.6366,
+      "lift_vs_overall": 6.27,
+      "expected_churners": 195.9,
+      "distinguishing_traits": [
+        {
+          "attribute": "content_mix",
+          "value": "Low-usage",
+          "share_in_segment": 1.0,
+          "share_in_population": 0.15,
+          "over_representation": 6.66
+        },
+        {
+          "attribute": "signup_channel",
+          "value": "Partner promo",
+          "share_in_segment": 1.0,
+          "share_in_population": 0.151,
+          "over_representation": 6.64
+        },
+        {
+          "attribute": "plan_type",
+          "value": "Premium",
+          "share_in_segment": 1.0,
+          "share_in_population": 0.4,
+          "over_representation": 2.5
+        }
+      ],
+      "numeric_profile": {
+        "tenure_months": {
+          "segment_median": 11.0,
+          "overall_median": 12.0
+        },
+        "avg_weekly_hours": {
+          "segment_median": 8.05,
+          "overall_median": 8.0
+        },
+        "support_tickets_90d": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        }
+      },
+      "monthly_revenue": 4182.78,
+      "expected_monthly_revenue_at_risk": 2544.78,
+      "share_of_total_revenue_at_risk": 0.2777
+    },
+    {
+      "segment_id": "S2",
+      "name": "Billing + support tickets 90d >= 2",
+      "rule": [
+        "Billing + support tickets 90d >= 2"
+      ],
+      "risk_tier": "High",
+      "subscribers": 682,
+      "share_of_base": 0.0802,
+      "predicted_churn_rate": 0.5623,
+      "actual_churn_rate": 0.5645,
+      "lift_vs_overall": 5.79,
+      "expected_churners": 383.5,
+      "distinguishing_traits": [
+        {
+          "attribute": "last_ticket_topic",
+          "value": "Billing",
+          "share_in_segment": 1.0,
+          "share_in_population": 0.18,
+          "over_representation": 5.56
+        }
+      ],
+      "numeric_profile": {
+        "tenure_months": {
+          "segment_median": 11.0,
+          "overall_median": 12.0
+        },
+        "avg_weekly_hours": {
+          "segment_median": 8.1,
+          "overall_median": 8.0
+        },
+        "support_tickets_90d": {
+          "segment_median": 2.0,
+          "overall_median": 0.0
+        }
+      },
+      "monthly_revenue": 7242.07,
+      "expected_monthly_revenue_at_risk": 4073.91,
+      "share_of_total_revenue_at_risk": 0.4446
+    },
+    {
+      "segment_id": "S3",
+      "name": "Everyone else (baseline)",
+      "rule": [
+        "NOT (Billing + support tickets 90d >= 2)",
+        "NOT (Premium + Low-usage + Partner promo)"
+      ],
+      "risk_tier": "Low",
+      "subscribers": 7496,
+      "share_of_base": 0.8819,
+      "predicted_churn_rate": 0.0331,
+      "actual_churn_rate": 0.0314,
+      "lift_vs_overall": 0.34,
+      "expected_churners": 247.8,
+      "distinguishing_traits": [],
+      "numeric_profile": {
+        "tenure_months": {
+          "segment_median": 12.0,
+          "overall_median": 12.0
+        },
+        "avg_weekly_hours": {
+          "segment_median": 8.0,
+          "overall_median": 8.0
+        },
+        "support_tickets_90d": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        }
+      },
+      "monthly_revenue": 77621.28,
+      "expected_monthly_revenue_at_risk": 2544.05,
+      "share_of_total_revenue_at_risk": 0.2777
+    }
+  ],
+  "churn_drivers": [
+    {
+      "feature": "Premium + Low-usage + Partner promo",
+      "comparison": "if present vs absent",
+      "odds_ratio": 47.983,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "Billing + support tickets 90d >= 2",
+      "comparison": "if present vs absent",
+      "odds_ratio": 33.833,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "last_ticket_topic = Account",
+      "comparison": "vs No ticket",
+      "odds_ratio": 1.324,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "last_ticket_topic = Content",
+      "comparison": "vs No ticket",
+      "odds_ratio": 1.291,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "last_ticket_topic = Billing",
+      "comparison": "vs No ticket",
+      "odds_ratio": 1.267,
+      "direction": "raises churn"
+    }
+  ],
+  "caveats": [
+    "Drivers are associations from historical data, not proven causes; test interventions before rolling out.",
+    "plan_type = Premium has a high raw churn rate (13%), but outside the high-risk segments (S1, S2) it churns at 3.1%, close to the 3.1% baseline. Its raw rate comes from those segments, so only target plan_type = Premium in the combinations they define.",
+    "content_mix = Low-usage has a high raw churn rate (23%), but outside the high-risk segments (S1, S2) it churns at 2.9%, close to the 3.1% baseline. Its raw rate comes from those segments, so only target content_mix = Low-usage in the combinations they define.",
+    "last_ticket_topic = Billing has a high raw churn rate (28%), but outside the high-risk segments (S1, S2) it churns at 3.4%, close to the 3.1% baseline. Its raw rate comes from those segments, so only target last_ticket_topic = Billing in the combinations they define.",
+    "signup_channel = Partner promo has a high raw churn rate (22%), but outside the high-risk segments (S1, S2) it churns at 2.9%, close to the 3.1% baseline. Its raw rate comes from those segments, so only target signup_channel = Partner promo in the combinations they define.",
+    "Customers outside the high-risk segments churn at about 3.1%; treat that as baseline churn.",
+    "Some customers match more than one interaction flag; their risks overlap rather than stack, so the model includes correction terms that are left out of the driver list."
+  ]
+}

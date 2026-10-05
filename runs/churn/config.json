@@ -1,0 +1,39 @@
+{
+  "name": "churn",
+  "csv": "uploads/churn.csv",
+  "target": "Churn?",
+  "positive_label": "true.",
+  "id_column": null,
+  "revenue_column": null,
+  "categorical": [
+    "State",
+    "Int'l Plan",
+    "VMail Plan"
+  ],
+  "numeric": [
+    "Account Length",
+    "Area Code",
+    "VMail Message",
+    "Day Mins",
+    "Day Calls",
+    "Day Charge",
+    "Eve Mins",
+    "Eve Calls",
+    "Eve Charge",
+    "Night Mins",
+    "Night Calls",
+    "Night Charge",
+    "Intl Mins",
+    "Intl Calls",
+    "Intl Charge",
+    "CustServ Calls"
+  ],
+  "excluded": {
+    "Phone": "free text or identifier (too many unique values)"
+  },
+  "category_order": {},
+  "entity": "customers",
+  "business_context": "a subscription business",
+  "currency": "$",
+  "display_name": "Churn"
+}

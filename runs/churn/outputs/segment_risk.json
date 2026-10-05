@@ -1,0 +1,683 @@
+{
+  "purpose": "Churn-risk segments for customers of a subscription business. Use these to decide which groups to target and what retention actions to take.",
+  "dataset": {
+    "name": "churn",
+    "rows": 3333,
+    "entity": "customers",
+    "business_context": "a subscription business",
+    "overall_churn_rate": 0.1449,
+    "total_monthly_revenue": null,
+    "expected_monthly_revenue_at_risk": null,
+    "currency": "$"
+  },
+  "model": {
+    "type": "Gradient boosting (raw features)",
+    "why": "Gradient boosting beats the explainable model by more than 0.01 ROC-AUC, so it scores customers; logistic regression is still used to explain the drivers.",
+    "validation": "5-fold stratified cross-validation; segment figures use out-of-fold predictions",
+    "metrics": {
+      "roc_auc": 0.9124,
+      "pr_auc": 0.8609,
+      "brier": 0.0413,
+      "top_decile_churn_rate": 0.9521,
+      "top_decile_lift": 6.57,
+      "top_decile_share_of_churners_captured": 0.6584
+    },
+    "engineered_features": {
+      "flag_no_Day_Mins_ge_224_76_Eve_Mins_ge_158_94": "VMail Plan = no AND Day Mins >= 225 AND Eve Mins >= 159",
+      "flag_Day_Mins_ge_194_Eve_Mins_ge_213_44_Day_Charge_ge_35_488": "Day Mins >= 194 AND Eve Mins >= 213 AND Day Charge >= 35.5",
+      "flag_Day_Mins_lt_179_4_CustServ_Calls_ge_4": "Day Mins < 179 AND CustServ Calls >= 4",
+      "flag_yes_Intl_Calls_lt_4": "Int'l Plan = yes AND Intl Calls < 4"
+    }
+  },
+  "segments": [
+    {
+      "segment_id": "S1",
+      "name": "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159 + Day Mins > 264",
+      "rule": [
+        "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159",
+        "Day Mins > 264"
+      ],
+      "risk_tier": "High",
+      "subscribers": 133,
+      "share_of_base": 0.0399,
+      "predicted_churn_rate": 0.8258,
+      "actual_churn_rate": 0.8496,
+      "lift_vs_overall": 5.7,
+      "expected_churners": 109.8,
+      "distinguishing_traits": [],
+      "numeric_profile": {
+        "Account Length": {
+          "segment_median": 98.0,
+          "overall_median": 101.0
+        },
+        "Area Code": {
+          "segment_median": 415.0,
+          "overall_median": 415.0
+        },
+        "VMail Message": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        },
+        "Day Mins": {
+          "segment_median": 280.0,
+          "overall_median": 179.4
+        },
+        "Day Calls": {
+          "segment_median": 104.0,
+          "overall_median": 101.0
+        },
+        "Day Charge": {
+          "segment_median": 47.6,
+          "overall_median": 30.5
+        },
+        "Eve Mins": {
+          "segment_median": 221.1,
+          "overall_median": 201.4
+        },
+        "Eve Calls": {
+          "segment_median": 102.0,
+          "overall_median": 100.0
+        },
+        "Eve Charge": {
+          "segment_median": 18.79,
+          "overall_median": 17.12
+        },
+        "Night Mins": {
+          "segment_median": 204.4,
+          "overall_median": 201.2
+        },
+        "Night Calls": {
+          "segment_median": 103.0,
+          "overall_median": 100.0
+        },
+        "Night Charge": {
+          "segment_median": 9.2,
+          "overall_median": 9.05
+        },
+        "Intl Mins": {
+          "segment_median": 10.4,
+          "overall_median": 10.3
+        },
+        "Intl Calls": {
+          "segment_median": 4.0,
+          "overall_median": 4.0
+        },
+        "Intl Charge": {
+          "segment_median": 2.81,
+          "overall_median": 2.78
+        },
+        "CustServ Calls": {
+          "segment_median": 1.0,
+          "overall_median": 1.0
+        }
+      }
+    },
+    {
+      "segment_id": "S2",
+      "name": "Day Mins < 179 + CustServ Calls >= 4",
+      "rule": [
+        "NOT (VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159)",
+        "Day Mins < 179 + CustServ Calls >= 4"
+      ],
+      "risk_tier": "High",
+      "subscribers": 146,
+      "share_of_base": 0.0438,
+      "predicted_churn_rate": 0.6872,
+      "actual_churn_rate": 0.7466,
+      "lift_vs_overall": 4.74,
+      "expected_churners": 100.3,
+      "distinguishing_traits": [],
+      "numeric_profile": {
+        "Account Length": {
+          "segment_median": 101.0,
+          "overall_median": 101.0
+        },
+        "Area Code": {
+          "segment_median": 415.0,
+          "overall_median": 415.0
+        },
+        "VMail Message": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        },
+        "Day Mins": {
+          "segment_median": 147.6,
+          "overall_median": 179.4
+        },
+        "Day Calls": {
+          "segment_median": 99.0,
+          "overall_median": 101.0
+        },
+        "Day Charge": {
+          "segment_median": 25.09,
+          "overall_median": 30.5
+        },
+        "Eve Mins": {
+          "segment_median": 200.15,
+          "overall_median": 201.4
+        },
+        "Eve Calls": {
+          "segment_median": 102.0,
+          "overall_median": 100.0
+        },
+        "Eve Charge": {
+          "segment_median": 17.02,
+          "overall_median": 17.12
+        },
+        "Night Mins": {
+          "segment_median": 199.2,
+          "overall_median": 201.2
+        },
+        "Night Calls": {
+          "segment_median": 95.5,
+          "overall_median": 100.0
+        },
+        "Night Charge": {
+          "segment_median": 8.96,
+          "overall_median": 9.05
+        },
+        "Intl Mins": {
+          "segment_median": 10.3,
+          "overall_median": 10.3
+        },
+        "Intl Calls": {
+          "segment_median": 3.0,
+          "overall_median": 4.0
+        },
+        "Intl Charge": {
+          "segment_median": 2.78,
+          "overall_median": 2.78
+        },
+        "CustServ Calls": {
+          "segment_median": 4.0,
+          "overall_median": 1.0
+        }
+      }
+    },
+    {
+      "segment_id": "S3",
+      "name": "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159 + Day Mins <= 264 + Eve Charge > 19.1",
+      "rule": [
+        "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159",
+        "Day Mins <= 264",
+        "Eve Charge > 19.1"
+      ],
+      "risk_tier": "High",
+      "subscribers": 100,
+      "share_of_base": 0.03,
+      "predicted_churn_rate": 0.5405,
+      "actual_churn_rate": 0.65,
+      "lift_vs_overall": 3.73,
+      "expected_churners": 54.0,
+      "distinguishing_traits": [],
+      "numeric_profile": {
+        "Account Length": {
+          "segment_median": 105.0,
+          "overall_median": 101.0
+        },
+        "Area Code": {
+          "segment_median": 415.0,
+          "overall_median": 415.0
+        },
+        "VMail Message": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        },
+        "Day Mins": {
+          "segment_median": 240.85,
+          "overall_median": 179.4
+        },
+        "Day Calls": {
+          "segment_median": 101.0,
+          "overall_median": 101.0
+        },
+        "Day Charge": {
+          "segment_median": 40.95,
+          "overall_median": 30.5
+        },
+        "Eve Mins": {
+          "segment_median": 255.95,
+          "overall_median": 201.4
+        },
+        "Eve Calls": {
+          "segment_median": 101.0,
+          "overall_median": 100.0
+        },
+        "Eve Charge": {
+          "segment_median": 21.76,
+          "overall_median": 17.12
+        },
+        "Night Mins": {
+          "segment_median": 194.05,
+          "overall_median": 201.2
+        },
+        "Night Calls": {
+          "segment_median": 100.5,
+          "overall_median": 100.0
+        },
+        "Night Charge": {
+          "segment_median": 8.73,
+          "overall_median": 9.05
+        },
+        "Intl Mins": {
+          "segment_median": 9.85,
+          "overall_median": 10.3
+        },
+        "Intl Calls": {
+          "segment_median": 4.0,
+          "overall_median": 4.0
+        },
+        "Intl Charge": {
+          "segment_median": 2.66,
+          "overall_median": 2.78
+        },
+        "CustServ Calls": {
+          "segment_median": 1.0,
+          "overall_median": 1.0
+        }
+      }
+    },
+    {
+      "segment_id": "S4",
+      "name": "Int'l Plan = yes + Intl Calls < 4",
+      "rule": [
+        "NOT (VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159)",
+        "NOT (Day Mins < 179 + CustServ Calls >= 4)",
+        "Int'l Plan = yes + Intl Calls < 4"
+      ],
+      "risk_tier": "High",
+      "subscribers": 104,
+      "share_of_base": 0.0312,
+      "predicted_churn_rate": 0.5274,
+      "actual_churn_rate": 0.5673,
+      "lift_vs_overall": 3.64,
+      "expected_churners": 54.8,
+      "distinguishing_traits": [
+        {
+          "attribute": "Int'l Plan",
+          "value": "yes",
+          "share_in_segment": 1.0,
+          "share_in_population": 0.097,
+          "over_representation": 10.32
+        }
+      ],
+      "numeric_profile": {
+        "Account Length": {
+          "segment_median": 106.0,
+          "overall_median": 101.0
+        },
+        "Area Code": {
+          "segment_median": 415.0,
+          "overall_median": 415.0
+        },
+        "VMail Message": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        },
+        "Day Mins": {
+          "segment_median": 168.7,
+          "overall_median": 179.4
+        },
+        "Day Calls": {
+          "segment_median": 101.5,
+          "overall_median": 101.0
+        },
+        "Day Charge": {
+          "segment_median": 28.68,
+          "overall_median": 30.5
+        },
+        "Eve Mins": {
+          "segment_median": 184.8,
+          "overall_median": 201.4
+        },
+        "Eve Calls": {
+          "segment_median": 98.0,
+          "overall_median": 100.0
+        },
+        "Eve Charge": {
+          "segment_median": 15.71,
+          "overall_median": 17.12
+        },
+        "Night Mins": {
+          "segment_median": 200.45,
+          "overall_median": 201.2
+        },
+        "Night Calls": {
+          "segment_median": 100.0,
+          "overall_median": 100.0
+        },
+        "Night Charge": {
+          "segment_median": 9.02,
+          "overall_median": 9.05
+        },
+        "Intl Mins": {
+          "segment_median": 10.95,
+          "overall_median": 10.3
+        },
+        "Intl Calls": {
+          "segment_median": 3.0,
+          "overall_median": 4.0
+        },
+        "Intl Charge": {
+          "segment_median": 2.96,
+          "overall_median": 2.78
+        },
+        "CustServ Calls": {
+          "segment_median": 1.0,
+          "overall_median": 1.0
+        }
+      }
+    },
+    {
+      "segment_id": "S5",
+      "name": "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159 + Day Mins <= 264 + Eve Charge <= 19.1",
+      "rule": [
+        "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159",
+        "Day Mins <= 264",
+        "Eve Charge <= 19.1"
+      ],
+      "risk_tier": "Low",
+      "subscribers": 166,
+      "share_of_base": 0.0498,
+      "predicted_churn_rate": 0.1581,
+      "actual_churn_rate": 0.1446,
+      "lift_vs_overall": 1.09,
+      "expected_churners": 26.2,
+      "distinguishing_traits": [],
+      "numeric_profile": {
+        "Account Length": {
+          "segment_median": 99.5,
+          "overall_median": 101.0
+        },
+        "Area Code": {
+          "segment_median": 415.0,
+          "overall_median": 415.0
+        },
+        "VMail Message": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        },
+        "Day Mins": {
+          "segment_median": 239.3,
+          "overall_median": 179.4
+        },
+        "Day Calls": {
+          "segment_median": 102.0,
+          "overall_median": 101.0
+        },
+        "Day Charge": {
+          "segment_median": 40.68,
+          "overall_median": 30.5
+        },
+        "Eve Mins": {
+          "segment_median": 188.25,
+          "overall_median": 201.4
+        },
+        "Eve Calls": {
+          "segment_median": 102.0,
+          "overall_median": 100.0
+        },
+        "Eve Charge": {
+          "segment_median": 16.0,
+          "overall_median": 17.12
+        },
+        "Night Mins": {
+          "segment_median": 198.55,
+          "overall_median": 201.2
+        },
+        "Night Calls": {
+          "segment_median": 100.0,
+          "overall_median": 100.0
+        },
+        "Night Charge": {
+          "segment_median": 8.93,
+          "overall_median": 9.05
+        },
+        "Intl Mins": {
+          "segment_median": 10.4,
+          "overall_median": 10.3
+        },
+        "Intl Calls": {
+          "segment_median": 4.0,
+          "overall_median": 4.0
+        },
+        "Intl Charge": {
+          "segment_median": 2.81,
+          "overall_median": 2.78
+        },
+        "CustServ Calls": {
+          "segment_median": 1.0,
+          "overall_median": 1.0
+        }
+      }
+    },
+    {
+      "segment_id": "S6",
+      "name": "Everyone else (baseline)",
+      "rule": [
+        "NOT (VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159)",
+        "NOT (Day Mins < 179 + CustServ Calls >= 4)",
+        "NOT (Int'l Plan = yes + Intl Calls < 4)"
+      ],
+      "risk_tier": "Low",
+      "subscribers": 2684,
+      "share_of_base": 0.8053,
+      "predicted_churn_rate": 0.0452,
+      "actual_churn_rate": 0.0421,
+      "lift_vs_overall": 0.31,
+      "expected_churners": 121.4,
+      "distinguishing_traits": [],
+      "numeric_profile": {
+        "Account Length": {
+          "segment_median": 100.0,
+          "overall_median": 101.0
+        },
+        "Area Code": {
+          "segment_median": 415.0,
+          "overall_median": 415.0
+        },
+        "VMail Message": {
+          "segment_median": 0.0,
+          "overall_median": 0.0
+        },
+        "Day Mins": {
+          "segment_median": 174.5,
+          "overall_median": 179.4
+        },
+        "Day Calls": {
+          "segment_median": 100.0,
+          "overall_median": 101.0
+        },
+        "Day Charge": {
+          "segment_median": 29.67,
+          "overall_median": 30.5
+        },
+        "Eve Mins": {
+          "segment_median": 199.9,
+          "overall_median": 201.4
+        },
+        "Eve Calls": {
+          "segment_median": 100.0,
+          "overall_median": 100.0
+        },
+        "Eve Charge": {
+          "segment_median": 16.99,
+          "overall_median": 17.12
+        },
+        "Night Mins": {
+          "segment_median": 201.6,
+          "overall_median": 201.2
+        },
+        "Night Calls": {
+          "segment_median": 101.0,
+          "overall_median": 100.0
+        },
+        "Night Charge": {
+          "segment_median": 9.07,
+          "overall_median": 9.05
+        },
+        "Intl Mins": {
+          "segment_median": 10.3,
+          "overall_median": 10.3
+        },
+        "Intl Calls": {
+          "segment_median": 4.0,
+          "overall_median": 4.0
+        },
+        "Intl Charge": {
+          "segment_median": 2.78,
+          "overall_median": 2.78
+        },
+        "CustServ Calls": {
+          "segment_median": 1.0,
+          "overall_median": 1.0
+        }
+      }
+    }
+  ],
+  "churn_drivers": [
+    {
+      "feature": "Day Mins < 179 + CustServ Calls >= 4",
+      "comparison": "if present vs absent",
+      "odds_ratio": 74.11,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "Int'l Plan = yes + Intl Calls < 4",
+      "comparison": "if present vs absent",
+      "odds_ratio": 6.11,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "Int'l Plan = yes",
+      "comparison": "vs no",
+      "odds_ratio": 5.624,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "VMail Plan = no + Day Mins >= 225 + Eve Mins >= 159",
+      "comparison": "if present vs absent",
+      "odds_ratio": 4.967,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "VMail Plan = yes",
+      "comparison": "vs no",
+      "odds_ratio": 0.279,
+      "direction": "lowers churn"
+    },
+    {
+      "feature": "State = TX",
+      "comparison": "vs Other",
+      "odds_ratio": 2.953,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = NJ",
+      "comparison": "vs Other",
+      "odds_ratio": 2.239,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = MT",
+      "comparison": "vs Other",
+      "odds_ratio": 1.927,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = VA",
+      "comparison": "vs Other",
+      "odds_ratio": 0.525,
+      "direction": "lowers churn"
+    },
+    {
+      "feature": "State = MD",
+      "comparison": "vs Other",
+      "odds_ratio": 1.787,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = MA",
+      "comparison": "vs Other",
+      "odds_ratio": 1.721,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = WI",
+      "comparison": "vs Other",
+      "odds_ratio": 0.592,
+      "direction": "lowers churn"
+    },
+    {
+      "feature": "State = MI",
+      "comparison": "vs Other",
+      "odds_ratio": 1.649,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = AL",
+      "comparison": "vs Other",
+      "odds_ratio": 0.622,
+      "direction": "lowers churn"
+    },
+    {
+      "feature": "State = NV",
+      "comparison": "vs Other",
+      "odds_ratio": 1.565,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = WY",
+      "comparison": "vs Other",
+      "odds_ratio": 0.639,
+      "direction": "lowers churn"
+    },
+    {
+      "feature": "VMail Message",
+      "comparison": "per 1 standard deviation increase",
+      "odds_ratio": 1.531,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "Day Mins >= 194 + Eve Mins >= 213 + Day Charge >= 35.5",
+      "comparison": "if present vs absent",
+      "odds_ratio": 1.478,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = MN",
+      "comparison": "vs Other",
+      "odds_ratio": 1.475,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = WA",
+      "comparison": "vs Other",
+      "odds_ratio": 1.453,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = KS",
+      "comparison": "vs Other",
+      "odds_ratio": 1.395,
+      "direction": "raises churn"
+    },
+    {
+      "feature": "State = VT",
+      "comparison": "vs Other",
+      "odds_ratio": 0.776,
+      "direction": "lowers churn"
+    },
+    {
+      "feature": "State = IN",
+      "comparison": "vs Other",
+      "odds_ratio": 0.799,
+      "direction": "lowers churn"
+    }
+  ],
+  "caveats": [
+    "Drivers are associations from historical data, not proven causes; test interventions before rolling out.",
+    "Customers outside the high-risk segments churn at about 4.8%; treat that as baseline churn.",
+    "Some customers match more than one interaction flag; their risks overlap rather than stack, so the model includes correction terms that are left out of the driver list."
+  ]
+}

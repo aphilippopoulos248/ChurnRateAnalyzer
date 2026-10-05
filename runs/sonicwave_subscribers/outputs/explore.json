@@ -1,0 +1,632 @@
+{
+ "overall": 0.0971,
+ "rows": 8500,
+ "ranked_features": [
+  "support_tickets_90d",
+  "last_ticket_topic",
+  "content_mix",
+  "signup_channel",
+  "plan_type",
+  "avg_weekly_hours",
+  "tenure_months",
+  "payment_method",
+  "age_group"
+ ],
+ "attributes": {
+  "age_group": {
+   "label": "Age group",
+   "rows": [
+    {
+     "label": "25-34",
+     "rate": 0.0971,
+     "n": 2903
+    },
+    {
+     "label": "35-49",
+     "rate": 0.1023,
+     "n": 2356
+    },
+    {
+     "label": "Under 25",
+     "rate": 0.09,
+     "n": 1923
+    },
+    {
+     "label": "50 plus",
+     "rate": 0.0979,
+     "n": 1318
+    }
+   ],
+   "signal": 0.0002,
+   "kind": "categorical"
+  },
+  "plan_type": {
+   "label": "Plan type",
+   "rows": [
+    {
+     "label": "Premium",
+     "rate": 0.1319,
+     "n": 3397
+    },
+    {
+     "label": "Basic",
+     "rate": 0.0703,
+     "n": 2632
+    },
+    {
+     "label": "Family",
+     "rate": 0.0771,
+     "n": 1258
+    },
+    {
+     "label": "Free",
+     "rate": 0.0783,
+     "n": 1213
+    }
+   ],
+   "signal": 0.0093,
+   "kind": "categorical"
+  },
+  "content_mix": {
+   "label": "Content mix",
+   "rows": [
+    {
+     "label": "Music-heavy",
+     "rate": 0.0761,
+     "n": 3165
+    },
+    {
+     "label": "Balanced",
+     "rate": 0.0727,
+     "n": 2296
+    },
+    {
+     "label": "Podcast-heavy",
+     "rate": 0.0726,
+     "n": 1762
+    },
+    {
+     "label": "Low-usage",
+     "rate": 0.2263,
+     "n": 1277
+    }
+   ],
+   "signal": 0.0337,
+   "kind": "categorical"
+  },
+  "payment_method": {
+   "label": "Payment method",
+   "rows": [
+    {
+     "label": "Credit card",
+     "rate": 0.0929,
+     "n": 4705
+    },
+    {
+     "label": "PayPal",
+     "rate": 0.1046,
+     "n": 1702
+    },
+    {
+     "label": "Debit",
+     "rate": 0.1008,
+     "n": 1666
+    },
+    {
+     "label": "Gift card",
+     "rate": 0.0984,
+     "n": 427
+    }
+   ],
+   "signal": 0.0003,
+   "kind": "categorical"
+  },
+  "last_ticket_topic": {
+   "label": "Last ticket topic",
+   "rows": [
+    {
+     "label": "No ticket",
+     "rate": 0.0571,
+     "n": 4620
+    },
+    {
+     "label": "Billing",
+     "rate": 0.2812,
+     "n": 1529
+    },
+    {
+     "label": "Playback",
+     "rate": 0.0488,
+     "n": 1209
+    },
+    {
+     "label": "Account",
+     "rate": 0.059,
+     "n": 661
+    },
+    {
+     "label": "Content",
+     "rate": 0.0686,
+     "n": 481
+    }
+   ],
+   "signal": 0.0851,
+   "kind": "categorical"
+  },
+  "signup_channel": {
+   "label": "Signup channel",
+   "rows": [
+    {
+     "label": "Android",
+     "rate": 0.077,
+     "n": 2505
+    },
+    {
+     "label": "Web",
+     "rate": 0.0736,
+     "n": 2500
+    },
+    {
+     "label": "iOS",
+     "rate": 0.0727,
+     "n": 2215
+    },
+    {
+     "label": "Partner promo",
+     "rate": 0.2242,
+     "n": 1280
+    }
+   ],
+   "signal": 0.0327,
+   "kind": "categorical"
+  },
+  "tenure_months": {
+   "label": "Tenure months",
+   "rows": [
+    {
+     "label": "1\u20137",
+     "rate": 0.1059,
+     "n": 2106
+    },
+    {
+     "label": "7\u201310",
+     "rate": 0.0977,
+     "n": 1464
+    },
+    {
+     "label": "10\u201314",
+     "rate": 0.0982,
+     "n": 1558
+    },
+    {
+     "label": "14\u201322",
+     "rate": 0.1007,
+     "n": 1728
+    },
+    {
+     "label": "22\u201360",
+     "rate": 0.0803,
+     "n": 1644
+    }
+   ],
+   "signal": 0.0009,
+   "kind": "numeric"
+  },
+  "avg_weekly_hours": {
+   "label": "Avg weekly hours",
+   "rows": [
+    {
+     "label": "0.3\u20134.1",
+     "rate": 0.0935,
+     "n": 1712
+    },
+    {
+     "label": "4.1\u20136.6",
+     "rate": 0.094,
+     "n": 1724
+    },
+    {
+     "label": "6.6\u20139.8",
+     "rate": 0.0941,
+     "n": 1668
+    },
+    {
+     "label": "9.8\u201316",
+     "rate": 0.1179,
+     "n": 1705
+    },
+    {
+     "label": "16\u201340",
+     "rate": 0.0857,
+     "n": 1691
+    }
+   ],
+   "signal": 0.0014,
+   "kind": "numeric"
+  },
+  "support_tickets_90d": {
+   "label": "Support tickets 90d",
+   "rows": [
+    {
+     "label": "0",
+     "rate": 0.0571,
+     "n": 4620
+    },
+    {
+     "label": "1",
+     "rate": 0.0543,
+     "n": 2836
+    },
+    {
+     "label": "2",
+     "rate": 0.3948,
+     "n": 846
+    },
+    {
+     "label": "3+",
+     "rate": 0.3687,
+     "n": 198
+    }
+   ],
+   "signal": 0.1372,
+   "kind": "numeric"
+  }
+ },
+ "heatmaps": {
+  "last_ticket_topic__support_tickets_90d": {
+   "title": "Last ticket topic \u00d7 support tickets 90d: up to 57% churn",
+   "row_label": "Last ticket topic",
+   "col_label": "Support tickets 90d",
+   "rows": [
+    "No ticket",
+    "Billing",
+    "Playback",
+    "Account",
+    "Content"
+   ],
+   "cols": [
+    "0",
+    "1",
+    "2",
+    "3+"
+   ],
+   "cells": [
+    [
+     {
+      "rate": 0.0571,
+      "n": 4620
+     },
+     {
+      "rate": null,
+      "n": 0
+     },
+     {
+      "rate": null,
+      "n": 0
+     },
+     {
+      "rate": null,
+      "n": 0
+     }
+    ],
+    [
+     {
+      "rate": null,
+      "n": 0
+     },
+     {
+      "rate": 0.0531,
+      "n": 847
+     },
+     {
+      "rate": 0.5722,
+      "n": 547
+     },
+     {
+      "rate": 0.5333,
+      "n": 135
+     }
+    ],
+    [
+     {
+      "rate": null,
+      "n": 0
+     },
+     {
+      "rate": 0.0491,
+      "n": 1018
+     },
+     {
+      "rate": 0.0552,
+      "n": 163
+     },
+     {
+      "rate": 0.0,
+      "n": 28
+     }
+    ],
+    [
+     {
+      "rate": null,
+      "n": 0
+     },
+     {
+      "rate": 0.0542,
+      "n": 554
+     },
+     {
+      "rate": 0.0976,
+      "n": 82
+     },
+     {
+      "rate": 0.04,
+      "n": 25
+     }
+    ],
+    [
+     {
+      "rate": null,
+      "n": 0
+     },
+     {
+      "rate": 0.0695,
+      "n": 417
+     },
+     {
+      "rate": 0.0741,
+      "n": 54
+     },
+     {
+      "rate": 0.0,
+      "n": 10
+     }
+    ]
+   ]
+  },
+  "plan_type__content_mix": {
+   "title": "Plan type \u00d7 content mix: up to 37% churn",
+   "row_label": "Plan type",
+   "col_label": "Content mix",
+   "rows": [
+    "Premium",
+    "Basic",
+    "Family",
+    "Free"
+   ],
+   "cols": [
+    "Music-heavy",
+    "Balanced",
+    "Podcast-heavy",
+    "Low-usage"
+   ],
+   "cells": [
+    [
+     {
+      "rate": 0.0717,
+      "n": 1199
+     },
+     {
+      "rate": 0.0731,
+      "n": 875
+     },
+     {
+      "rate": 0.0807,
+      "n": 657
+     },
+     {
+      "rate": 0.3679,
+      "n": 666
+     }
+    ],
+    [
+     {
+      "rate": 0.0709,
+      "n": 1002
+     },
+     {
+      "rate": 0.0757,
+      "n": 753
+     },
+     {
+      "rate": 0.0611,
+      "n": 573
+     },
+     {
+      "rate": 0.0724,
+      "n": 304
+     }
+    ],
+    [
+     {
+      "rate": 0.0954,
+      "n": 482
+     },
+     {
+      "rate": 0.0723,
+      "n": 346
+     },
+     {
+      "rate": 0.0526,
+      "n": 266
+     },
+     {
+      "rate": 0.0732,
+      "n": 164
+     }
+    ],
+    [
+     {
+      "rate": 0.0788,
+      "n": 482
+     },
+     {
+      "rate": 0.0652,
+      "n": 322
+     },
+     {
+      "rate": 0.0977,
+      "n": 266
+     },
+     {
+      "rate": 0.0699,
+      "n": 143
+     }
+    ]
+   ]
+  },
+  "content_mix__signup_channel": {
+   "title": "Content mix \u00d7 signup channel: up to 52% churn",
+   "row_label": "Content mix",
+   "col_label": "Signup channel",
+   "rows": [
+    "Music-heavy",
+    "Balanced",
+    "Podcast-heavy",
+    "Low-usage"
+   ],
+   "cols": [
+    "Android",
+    "Web",
+    "iOS",
+    "Partner promo"
+   ],
+   "cells": [
+    [
+     {
+      "rate": 0.0815,
+      "n": 981
+     },
+     {
+      "rate": 0.0721,
+      "n": 943
+     },
+     {
+      "rate": 0.0756,
+      "n": 847
+     },
+     {
+      "rate": 0.0736,
+      "n": 394
+     }
+    ],
+    [
+     {
+      "rate": 0.0678,
+      "n": 723
+     },
+     {
+      "rate": 0.0736,
+      "n": 707
+     },
+     {
+      "rate": 0.0776,
+      "n": 606
+     },
+     {
+      "rate": 0.0731,
+      "n": 260
+     }
+    ],
+    [
+     {
+      "rate": 0.0787,
+      "n": 521
+     },
+     {
+      "rate": 0.0762,
+      "n": 551
+     },
+     {
+      "rate": 0.0621,
+      "n": 499
+     },
+     {
+      "rate": 0.0733,
+      "n": 191
+     }
+    ],
+    [
+     {
+      "rate": 0.0821,
+      "n": 280
+     },
+     {
+      "rate": 0.0736,
+      "n": 299
+     },
+     {
+      "rate": 0.0722,
+      "n": 263
+     },
+     {
+      "rate": 0.5172,
+      "n": 435
+     }
+    ]
+   ]
+  }
+ },
+ "flags": [
+  {
+   "name": "flag_billing_support_tickets_90d_ge_2",
+   "label": "Billing + support tickets 90d >= 2",
+   "description": "last_ticket_topic = Billing AND support_tickets_90d >= 2",
+   "conditions": [
+    {
+     "col": "last_ticket_topic",
+     "op": "==",
+     "value": "Billing"
+    },
+    {
+     "col": "support_tickets_90d",
+     "op": ">=",
+     "value": 2.0
+    }
+   ],
+   "n": 682,
+   "churn_rate": 0.5645,
+   "churn_rate_without_combination": 0.0608
+  },
+  {
+   "name": "flag_premium_low_usage_partner_promo",
+   "label": "Premium + Low-usage + Partner promo",
+   "description": "plan_type = Premium AND content_mix = Low-usage AND signup_channel = Partner promo",
+   "conditions": [
+    {
+     "col": "plan_type",
+     "op": "==",
+     "value": "Premium"
+    },
+    {
+     "col": "content_mix",
+     "op": "==",
+     "value": "Low-usage"
+    },
+    {
+     "col": "signup_channel",
+     "op": "==",
+     "value": "Partner promo"
+    }
+   ],
+   "n": 350,
+   "churn_rate": 0.6286,
+   "churn_rate_without_combination": 0.0743
+  }
+ ],
+ "corrections": [
+  {
+   "name": "overlap_1_2",
+   "of": [
+    "flag_billing_support_tickets_90d_ge_2",
+    "flag_premium_low_usage_partner_promo"
+   ],
+   "n": 28,
+   "description": "Has both: Billing + support tickets 90d >= 2 and Premium + Low-usage + Partner promo"
+  }
+ ],
+ "revenue": {
+  "column": "monthly_spend",
+  "total": 89046.13,
+  "lost": 9139.7
+ }
+}
